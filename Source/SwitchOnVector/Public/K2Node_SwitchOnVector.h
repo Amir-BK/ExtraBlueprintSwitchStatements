@@ -24,8 +24,6 @@ class SWITCHONVECTOR_API UK2Node_SwitchOnVector : public UK2Node_Switch
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float Tolerance = 0.1f;
 
 	UK2Node_SwitchOnVector();
 
@@ -34,8 +32,8 @@ public:
 
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
-	UFUNCTION(BlueprintCallable, Category = "SwitchOnVector")
-	static bool IsVectorNearlyEqual(FVector& A, FVector& B);
+	UFUNCTION(BlueprintCallable , Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
+	static bool IsVectorNotNearlyEqual(FVector& A, FVector& B);
 
 
 	virtual bool ShouldShowNodeProperties() const override { return true; }
@@ -48,6 +46,7 @@ protected:
 
 	virtual void CreateCasePins() override;
 	virtual FName GetUniquePinName() override;
+	FEdGraphPinType GetInnerCaseType() const override;
 
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 };
