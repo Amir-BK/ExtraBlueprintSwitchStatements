@@ -18,6 +18,7 @@ class SWITCHONVECTOR_API UK2Node_SwitchOnVector : public UK2Node_Switch
 	UPROPERTY()
 	TArray<FName> PinNames;
 
+
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<FVector> PinValues;
 
@@ -34,13 +35,15 @@ public:
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
 	UFUNCTION(BlueprintCallable, Category = "SwitchOnVector")
-	bool IsVectorNearlyEqual(FVector A, FVector B);
+	static bool IsVectorNearlyEqual(FVector& A, FVector& B);
+
 
 	virtual bool ShouldShowNodeProperties() const override { return true; }
 
 protected:
 	virtual void CreateSelectionPin() override;
-	virtual void AddPinToSwitchNode() override;
+
+	virtual FName GetPinNameGivenIndex(int32 Index) const override;
 	virtual FEdGraphPinType GetPinType() const override;
 
 	virtual void CreateCasePins() override;

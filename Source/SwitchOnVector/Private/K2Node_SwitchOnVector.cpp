@@ -13,8 +13,10 @@
 UK2Node_SwitchOnVector::UK2Node_SwitchOnVector()
 {
 	//bHasDefaultPin = false;
-	FunctionName = TEXT("IsVectorNearlyEqual");
 	FunctionClass = UK2Node_SwitchOnVector::StaticClass();
+	FunctionName = TEXT("IsVectorNearlyEqual");
+
+   
 }
 
 void UK2Node_SwitchOnVector::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
@@ -35,10 +37,13 @@ FText UK2Node_SwitchOnVector::GetNodeTitle(ENodeTitleType::Type TitleType) const
 
 }
 
-bool UK2Node_SwitchOnVector::IsVectorNearlyEqual(FVector A, FVector B)
+bool UK2Node_SwitchOnVector::IsVectorNearlyEqual(FVector& A, FVector& B)
 {
-    return FVector::PointsAreNear(A, B, Tolerance);
+    UE_LOG(LogTemp, Warning, TEXT("IsVectorNearlyEqual, %s, %s, %s"), *A.ToString(), *B.ToString(), FVector::PointsAreNear(A, B, 0.1) ? TEXT("true") : TEXT("false"));
+    return FVector::PointsAreNear(A, B, 0.1);
 }
+
+
 
 void UK2Node_SwitchOnVector::CreateSelectionPin()
 {
@@ -48,13 +53,11 @@ void UK2Node_SwitchOnVector::CreateSelectionPin()
 
 }
 
-void UK2Node_SwitchOnVector::AddPinToSwitchNode()
-{
-    const FName PinName = GetUniquePinName();
-    PinNames.Add(PinName);
 
-    UEdGraphPin* Pin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinName);
-    Pin->bAllowFriendlyName = false;
+FName UK2Node_SwitchOnVector::GetPinNameGivenIndex(int32 Index) const
+{
+    check(Index);
+    return PinNames[Index];
 }
 
 FEdGraphPinType UK2Node_SwitchOnVector::GetPinType() const
@@ -75,6 +78,8 @@ void UK2Node_SwitchOnVector::CreateCasePins()
 		UEdGraphPin* Pin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinName);
 		Pin->bAllowFriendlyName = false;
 	}
+
+    //CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, TEXT("Default"));
 }
 
 FName UK2Node_SwitchOnVector::GetUniquePinName()
@@ -94,6 +99,17 @@ FName UK2Node_SwitchOnVector::GetUniquePinName()
 
 void UK2Node_SwitchOnVector::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-    ReconstructNode();
+    bool bIsDirty = false;
+    FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+    if (PropertyName == TEXT("PinValues"))
+    {
+        bIsDirty = true;
+    }
+    
+    if (bIsDirty)
+    {
+         ReconstructNode();
+    }
     Super::PostEditChangeProperty(PropertyChangedEvent);
+    GetGraph()->NotifyNodeChanged(this);
 }
