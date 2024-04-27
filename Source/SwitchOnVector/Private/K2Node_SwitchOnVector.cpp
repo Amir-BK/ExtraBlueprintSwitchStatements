@@ -16,12 +16,11 @@
 
 
 UK2Node_SwitchOnVector::UK2Node_SwitchOnVector()
-    : Super()
 {
-	FunctionName = TEXT("IsVectorWithToleranceNotNearlyEqual");
+	//Set the default function name and class, this is the function that will be called when the switch is executed, if it returns true the output pin will be executed
+    FunctionName = TEXT("IsVectorWithToleranceNotNearlyEqual");
 	FunctionClass = UK2Node_SwitchOnVector::StaticClass();
-    //Function is static
-    //Function
+
 }
 
 void UK2Node_SwitchOnVector::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
@@ -43,19 +42,19 @@ FText UK2Node_SwitchOnVector::GetNodeTitle(ENodeTitleType::Type TitleType) const
 }
 
 
-static bool PointsAreNotNear(const FVector& Point1, const FVector& Point2, float Dist)
+static bool PointsAreNear(const FVector& Point1, const FVector& Point2, float Dist)
 {
     double Temp;
-
-    Temp = (Point1.X - Point2.X); if (FMath::Abs(Temp) < Dist) return false;
-    Temp = (Point1.Y - Point2.Y); if (FMath::Abs(Temp) < Dist) return false;
-    Temp = (Point1.Z - Point2.Z); if (FMath::Abs(Temp) < Dist) return false;
+    
+    Temp = (Point1.X - Point2.X); if (FMath::Abs(Temp) > Dist) return false;
+    Temp = (Point1.Y - Point2.Y); if (FMath::Abs(Temp) > Dist) return false;
+    Temp = (Point1.Z - Point2.Z); if (FMath::Abs(Temp) > Dist) return false;
     return true;
 }
 
 bool UK2Node_SwitchOnVector::IsVectorWithToleranceNotNearlyEqual(FVector& A, FVectorAndTolerance& B)
 {
-    return PointsAreNotNear(A, FVector(B.X, B.Y, B.Z), B.Tolerance);
+    return !PointsAreNear(A, FVector(B.X, B.Y, B.Z), B.Tolerance);
 
 }
 
