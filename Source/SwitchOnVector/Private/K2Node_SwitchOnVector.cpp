@@ -18,8 +18,10 @@
 UK2Node_SwitchOnVector::UK2Node_SwitchOnVector()
     : Super()
 {
-	FunctionName = TEXT("IsVectorNotNearlyEqual");
+	FunctionName = TEXT("IsVectorWithToleranceNotNearlyEqual");
 	FunctionClass = UK2Node_SwitchOnVector::StaticClass();
+    //Function is static
+    //Function
 }
 
 void UK2Node_SwitchOnVector::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
@@ -45,6 +47,11 @@ bool UK2Node_SwitchOnVector::IsVectorNotNearlyEqual(FVector& A, FVector& B)
     return !FVector::PointsAreNear(A, B, 0.1);
 }
 
+bool UK2Node_SwitchOnVector::IsVectorWithToleranceNotNearlyEqual(FVector& A, FVectorAndTolerance& B)
+{
+    return !FVector::PointsAreNear(A, FVector(B.X, B.Y, B.Z), B.Tolerance);
+}
+
 
 
 void UK2Node_SwitchOnVector::CreateSelectionPin()
@@ -57,18 +64,27 @@ void UK2Node_SwitchOnVector::CreateSelectionPin()
 }
 
 
+
 FName UK2Node_SwitchOnVector::GetPinNameGivenIndex(int32 Index) const
 {
     check(Index);
     return PinNames[Index];
 }
 
-FEdGraphPinType UK2Node_SwitchOnVector::GetPinType() const
+FEdGraphPinType UK2Node_SwitchOnVector::GetInnerCaseType() const
 {
 	FEdGraphPinType PinType;
 	PinType.PinCategory = UEdGraphSchema_K2::PC_Struct;
-	PinType.PinSubCategoryObject = TBaseStructure<FVector>::Get();
+	PinType.PinSubCategoryObject = FVectorAndTolerance::StaticStruct();
 	return PinType;
+}
+
+FEdGraphPinType UK2Node_SwitchOnVector::GetPinType() const
+{
+    FEdGraphPinType PinType;
+    PinType.PinCategory = UEdGraphSchema_K2::PC_Struct;
+    PinType.PinSubCategoryObject = TBaseStructure<FVector>::Get();
+    return PinType;
 }
 
 void UK2Node_SwitchOnVector::CreateCasePins()
@@ -120,7 +136,7 @@ FName UK2Node_SwitchOnVector::GetUniquePinName()
 FString UK2Node_SwitchOnVector::GetExportTextForPin(const UEdGraphPin* InPin) const
 {
 	
-	return FString::Printf(TEXT("(X=%3.3f,Y=%3.3f,Z=%3.3f)"), PinValues[InPin->SourceIndex].X, PinValues[InPin->SourceIndex].Y, PinValues[InPin->SourceIndex].Z);
+	return FString::Printf(TEXT("(X=%3.3f,Y=%3.3f,Z=%3.3f,Tolerance=%3.3f)"), PinValues[InPin->SourceIndex].X, PinValues[InPin->SourceIndex].Y, PinValues[InPin->SourceIndex].Z, Tolerance);
 }
 
 
@@ -149,7 +165,10 @@ void UK2Node_SwitchOnVector::PostEditChangeProperty(FPropertyChangedEvent& Prope
 		bIsDirty = true;
 	}
 
-
+    if (PropertyName == TEXT("Tolerance"))
+    {
+        bIsDirty = true;
+    }
 
 
     if (bIsDirty)

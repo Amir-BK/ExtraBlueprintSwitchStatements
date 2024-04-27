@@ -7,6 +7,25 @@
 #include "K2Node_Switch.h"
 #include "K2Node_SwitchOnVector.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FVectorAndTolerance
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float X = 0.0f;
+
+	UPROPERTY()
+	float Y = 0.0f;
+
+	UPROPERTY()
+	float Z = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = PinOptions)
+	float Tolerance = 0.1f;
+};
+
 /**
  * 
  */
@@ -23,6 +42,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<FVector> PinValues;
 
+	UPROPERTY(EditAnywhere, Category = PinOptions)
+	float Tolerance = 0.1f;
 
 
 	UK2Node_SwitchOnVector();
@@ -31,17 +52,23 @@ public:
 
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
+
 	UFUNCTION(BlueprintCallable , Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsVectorNotNearlyEqual(FVector& A, FVector& B);
+
+	UFUNCTION(BlueprintCallable, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
+	static bool IsVectorWithToleranceNotNearlyEqual(FVector& A, FVectorAndTolerance& B);
 
 
 	virtual bool ShouldShowNodeProperties() const override { return true; }
 
-	virtual void CreateSelectionPin() override;
 
 
 	//K2Node_Switch Interface
+	virtual void CreateSelectionPin() override;
+
 	virtual FName GetPinNameGivenIndex(int32 Index) const override;
+	virtual FEdGraphPinType GetInnerCaseType() const override;
 	virtual FEdGraphPinType GetPinType() const override;
 	virtual void CreateCasePins() override;
 	virtual FName GetUniquePinName() override;
