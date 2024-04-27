@@ -42,14 +42,21 @@ FText UK2Node_SwitchOnVector::GetNodeTitle(ENodeTitleType::Type TitleType) const
 
 }
 
-bool UK2Node_SwitchOnVector::IsVectorNotNearlyEqual(FVector& A, FVector& B)
+
+static bool PointsAreNotNear(const FVector& Point1, const FVector& Point2, float Dist)
 {
-    return !FVector::PointsAreNear(A, B, 0.1);
+    double Temp;
+
+    Temp = (Point1.X - Point2.X); if (FMath::Abs(Temp) < Dist) return false;
+    Temp = (Point1.Y - Point2.Y); if (FMath::Abs(Temp) < Dist) return false;
+    Temp = (Point1.Z - Point2.Z); if (FMath::Abs(Temp) < Dist) return false;
+    return true;
 }
 
 bool UK2Node_SwitchOnVector::IsVectorWithToleranceNotNearlyEqual(FVector& A, FVectorAndTolerance& B)
 {
-    return !FVector::PointsAreNear(A, FVector(B.X, B.Y, B.Z), B.Tolerance);
+    return PointsAreNotNear(A, FVector(B.X, B.Y, B.Z), B.Tolerance);
+
 }
 
 

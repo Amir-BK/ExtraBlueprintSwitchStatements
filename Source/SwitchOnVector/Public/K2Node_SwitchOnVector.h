@@ -53,9 +53,6 @@ public:
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
 
-	UFUNCTION(BlueprintCallable , Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsVectorNotNearlyEqual(FVector& A, FVector& B);
-
 	UFUNCTION(BlueprintCallable, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsVectorWithToleranceNotNearlyEqual(FVector& A, FVectorAndTolerance& B);
 
