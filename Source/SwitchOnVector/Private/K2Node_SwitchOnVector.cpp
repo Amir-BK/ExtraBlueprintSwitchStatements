@@ -4,20 +4,22 @@
 #include "K2Node_SwitchOnVector.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
-#include "EdGraph/EdGraph.h"
 #include "EdGraphSchema_K2.h"
+#include "EdGraph/EdGraphNode.h"
 
+#include "Internationalization/Internationalization.h"
+
+#include "UObject/Class.h"
+
+#include "UObject/UnrealType.h"
 
 
 
 UK2Node_SwitchOnVector::UK2Node_SwitchOnVector()
+    : Super()
 {
-	//bHasDefaultPin = false;
-    
-	FunctionClass = UK2Node_SwitchOnVector::StaticClass();
 	FunctionName = TEXT("IsVectorNotNearlyEqual");
-
-   
+	FunctionClass = UK2Node_SwitchOnVector::StaticClass();
 }
 
 void UK2Node_SwitchOnVector::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
@@ -40,7 +42,6 @@ FText UK2Node_SwitchOnVector::GetNodeTitle(ENodeTitleType::Type TitleType) const
 
 bool UK2Node_SwitchOnVector::IsVectorNotNearlyEqual(FVector& A, FVector& B)
 {
-    UE_LOG(LogTemp, Warning, TEXT("IsVectorNearlyEqual, %s, %s, %s"), *A.ToString(), *B.ToString(), FVector::PointsAreNear(A, B, 0.1) ? TEXT("true") : TEXT("false"));
     return !FVector::PointsAreNear(A, B, 0.1);
 }
 
@@ -58,18 +59,17 @@ void UK2Node_SwitchOnVector::CreateSelectionPin()
 
 FName UK2Node_SwitchOnVector::GetPinNameGivenIndex(int32 Index) const
 {
-    UE_LOG(LogTemp, Warning, TEXT("GetPinNameGivenIndex, %d"), Index);
-    
     check(Index);
     return PinNames[Index];
 }
 
-
 FEdGraphPinType UK2Node_SwitchOnVector::GetPinType() const
 {
-    return FEdGraphPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, TBaseStructure<FVector>::Get(), EPinContainerType::None, false, FEdGraphTerminalType());
+	FEdGraphPinType PinType;
+	PinType.PinCategory = UEdGraphSchema_K2::PC_Struct;
+	PinType.PinSubCategoryObject = TBaseStructure<FVector>::Get();
+	return PinType;
 }
-
 
 void UK2Node_SwitchOnVector::CreateCasePins()
 {
@@ -87,14 +87,20 @@ void UK2Node_SwitchOnVector::CreateCasePins()
     for (int32 Index = 0; Index < PinValues.Num(); ++Index)
     {
 
-         PinNames[Index] = FName(PinValues[Index].ToString());
+        PinNames[Index] = PinNames[Index];
 
+        // UEdGraphPin* Test = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, TBaseStructure<FVector>::Get(), PinNames[Index]);
+         UEdGraphPin* Pin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinNames[Index]);
+         Pin->bAllowFriendlyName = false;
+         Pin->PinFriendlyName = FText::FromString(PinValues[Index].ToString());
+         Pin->SourceIndex = Index;
 
-        CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinNames[Index]);
     }
 
-    //CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, TEXT("Default"));
+
 }
+
+
 
 FName UK2Node_SwitchOnVector::GetUniquePinName()
 {
@@ -111,10 +117,13 @@ FName UK2Node_SwitchOnVector::GetUniquePinName()
     return NewPinName;
 }
 
-FEdGraphPinType UK2Node_SwitchOnVector::GetInnerCaseType() const
+FString UK2Node_SwitchOnVector::GetExportTextForPin(const UEdGraphPin* InPin) const
 {
-    return FEdGraphPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, TBaseStructure<FVector>::Get(), EPinContainerType::None, false, FEdGraphTerminalType());
+	
+	return FString::Printf(TEXT("(X=%3.3f,Y=%3.3f,Z=%3.3f)"), PinValues[InPin->SourceIndex].X, PinValues[InPin->SourceIndex].Y, PinValues[InPin->SourceIndex].Z);
 }
+
+
 
 void UK2Node_SwitchOnVector::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -150,5 +159,6 @@ void UK2Node_SwitchOnVector::PostEditChangeProperty(FPropertyChangedEvent& Prope
     Super::PostEditChangeProperty(PropertyChangedEvent);
     GetGraph()->NotifyNodeChanged(this);
 
-    UE_LOG(LogTemp, Warning, TEXT("PostEditChangeProperty: %s"), *PropertyName.ToString());
 }
+
+

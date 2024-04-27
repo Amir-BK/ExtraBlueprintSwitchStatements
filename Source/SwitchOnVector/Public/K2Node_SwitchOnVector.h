@@ -15,20 +15,19 @@ class SWITCHONVECTOR_API UK2Node_SwitchOnVector : public UK2Node_Switch
 {
 	GENERATED_BODY()
 
+
+public:
 	UPROPERTY()
 	TArray<FName> PinNames;
-
 
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<FVector> PinValues;
 
-public:
 
 
 	UK2Node_SwitchOnVector();
 
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
-	virtual bool SupportsAddPinButton()  const override { return false; }
 
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
@@ -38,15 +37,17 @@ public:
 
 	virtual bool ShouldShowNodeProperties() const override { return true; }
 
-protected:
 	virtual void CreateSelectionPin() override;
 
+
+	//K2Node_Switch Interface
 	virtual FName GetPinNameGivenIndex(int32 Index) const override;
 	virtual FEdGraphPinType GetPinType() const override;
-
 	virtual void CreateCasePins() override;
 	virtual FName GetUniquePinName() override;
-	FEdGraphPinType GetInnerCaseType() const override;
+	FString GetExportTextForPin(const UEdGraphPin* InPin) const override;
+	virtual bool SupportsAddPinButton() const { return false; }
+
 
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 };

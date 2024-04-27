@@ -35,10 +35,8 @@ public class SwitchOnVector : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
+                "CoreUObject",
 				"Engine",
-				"Slate",
-				"SlateCore",
                  "BlueprintGraph",
 				 "UnrealEd",
 				// ... add private dependencies that you statically link with here ...	
