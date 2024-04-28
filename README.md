@@ -13,6 +13,6 @@ Switch on Int array (allows switching on an arbitrary collection of ints rather 
 ![image](https://github.com/Amir-BK/ExtraBlueprintSwitchStatements/assets/6035249/ca89a1de-2bc4-491a-9425-1af55af783fd)
 
 
-Custom blueprint nodes which inherits from K2Node_Switch and extends it to compare between two vectors while allowing input of a tolerance value.
+Custom blueprint nodes which inherit from K2Node_Switch and extends it.
 
-All the code is contained the single K2Node_SwitchOnVector header and cpp file, if you seek to extend this or make your own custom switch nodes, it wasn't obvious to me that the switch node creates the value for the case statement using the export text method, and this is also how I add the tolerance value to the 'inner case struct' so that the comparator function can be kept static.  
+K2Node_Switch creates a map of 'boolterms' that map between the output execution pins and functions that can be evaluated to a boolean, when the default node is shown and connected all other statements need to be evaluated, only if they return false will the default fire. The inner working of the K2Node_Switch are a bit confusing but the various examples in this repo should be helpful, essentially the BP compiler 'collects' the value assosciated with the pin through the 'GetTextForExport' methods we return a string from which the compiler can reconstruct our desired variable, as the comparator method itself needs to be static we use this string to pass on 'extra data' such as the tolerance in the float functions, etc, any function that can be made static and can return a bool can be used to create a blueprint switch statement. 
