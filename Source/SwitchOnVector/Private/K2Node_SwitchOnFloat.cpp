@@ -115,12 +115,9 @@ void UK2Node_SwitchOnFloat::CreateCasePins()
     for (int32 Index = 0; Index < PinValues.Num(); ++Index)
     {
 
-        //PinNames[Index] = PinNames[Index];
-
-        // UEdGraphPin* Test = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, TBaseStructure<FVector>::Get(), PinNames[Index]);
          UEdGraphPin* Pin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinNames[Index]);
          Pin->bAllowFriendlyName = false;
-         Pin->PinFriendlyName = FText::FromString(FString::Printf(TEXT("%3.3f"), PinValues[Index]));
+         Pin->PinFriendlyName = FText::FromString(FString::Printf(TEXT("%.3f"), PinValues[Index]));
          Pin->SourceIndex = Index;
 
     }
@@ -148,7 +145,7 @@ FName UK2Node_SwitchOnFloat::GetUniquePinName()
 FString UK2Node_SwitchOnFloat::GetExportTextForPin(const UEdGraphPin* InPin) const
 {
 	
-	return FString::Printf(TEXT("(value=%3.3f,Tolerance=%3.3f)"), PinValues[InPin->SourceIndex], Tolerance);
+	return FString::Printf(TEXT("(value=%f,Tolerance=%f)"), PinValues[InPin->SourceIndex], Tolerance);
 }
 
 
