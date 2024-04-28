@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FSwitchOnVectorModule : public IModuleInterface
+class FExtraBlueprintSwitchStatementsModule : public IModuleInterface
 {
 public:
 

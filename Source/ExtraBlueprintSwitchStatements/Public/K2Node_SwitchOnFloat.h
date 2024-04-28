@@ -26,7 +26,7 @@ struct FFloatAndTolerance
  * 
  */
 UCLASS()
-class SWITCHONVECTOR_API UK2Node_SwitchOnFloat : public UK2Node_Switch
+class EXTRABLUEPRINTSWITCHSTATEMENTS_API UK2Node_SwitchOnFloat : public UK2Node_Switch
 {
 	GENERATED_BODY()
 

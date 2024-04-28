@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class SwitchOnVector : ModuleRules
+public class ExtraBlueprintSwitchStatements : ModuleRules
 {
-	public SwitchOnVector(ReadOnlyTargetRules Target) : base(Target)
+	public ExtraBlueprintSwitchStatements(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		

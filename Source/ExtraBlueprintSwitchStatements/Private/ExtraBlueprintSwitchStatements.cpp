@@ -1,15 +1,15 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "SwitchOnVector.h"
+#include "ExtraBlueprintSwitchStatements.h"
 
-#define LOCTEXT_NAMESPACE "FSwitchOnVectorModule"
+#define LOCTEXT_NAMESPACE "FExtraBlueprintSwitchStatementsModule"
 
-void FSwitchOnVectorModule::StartupModule()
+void FExtraBlueprintSwitchStatementsModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 }
 
-void FSwitchOnVectorModule::ShutdownModule()
+void FExtraBlueprintSwitchStatementsModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
@@ -17,4 +17,4 @@ void FSwitchOnVectorModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FSwitchOnVectorModule, SwitchOnVector)
+IMPLEMENT_MODULE(FExtraBlueprintSwitchStatementsModule, ExtraBlueprintSwitchStatements)

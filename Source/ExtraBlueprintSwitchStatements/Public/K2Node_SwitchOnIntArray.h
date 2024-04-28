@@ -12,7 +12,7 @@
  * 
  */
 UCLASS()
-class SWITCHONVECTOR_API UK2Node_SwitchOnIntArray : public UK2Node_Switch
+class EXTRABLUEPRINTSWITCHSTATEMENTS_API UK2Node_SwitchOnIntArray : public UK2Node_Switch
 {
 	GENERATED_BODY()
 

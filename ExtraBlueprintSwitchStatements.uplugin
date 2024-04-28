@@ -7,16 +7,16 @@
 	"Category": "Other",
 	"CreatedBy": "Amir Ben-Kiki",
 	"CreatedByURL": "",
-	"DocsURL": "",
+	"DocsURL": "https://github.com/Amir-BK/ExtraBlueprintSwitchStatements",
 	"MarketplaceURL": "",
-	"SupportURL": "https://github.com/Amir-BK/Unreal_SwitchOnVector",
+	"SupportURL": "",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "SwitchOnVector",
+			"Name": "ExtraBlueprintSwitchStatements",
 			"Type": "UncookedOnly",
 			"LoadingPhase": "Default"
 		}
