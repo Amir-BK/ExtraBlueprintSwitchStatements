@@ -147,8 +147,6 @@ void UK2Node_SwitchOnIntArray::PostEditChangeProperty(FPropertyChangedEvent& Pro
 {
     bool bIsDirty = false;
     FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-    UE_LOG(LogTemp, Warning, TEXT("PostEditChangeProperty %s"), *PropertyName.ToString());
-
 
     if (PropertyName == TEXT("PinValues"))
     {

@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "ExtraBlueprintSwitchStatements.h"
 
 #define LOCTEXT_NAMESPACE "FExtraBlueprintSwitchStatementsModule"

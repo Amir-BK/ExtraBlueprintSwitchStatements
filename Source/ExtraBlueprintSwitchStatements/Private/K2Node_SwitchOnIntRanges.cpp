@@ -38,13 +38,14 @@ void UK2Node_SwitchOnIntRanges::GetMenuActions(FBlueprintActionDatabaseRegistrar
 FText UK2Node_SwitchOnIntRanges::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
     return INVTEXT("Switch on Int Range");
-
 }
 
 bool UK2Node_SwitchOnIntRanges::IsIntNotWithinRange(int& A, FSwitchIntRange& B)
 {
+    TRange<int> Range = TRange<int>();
+    Range = B.Inclusive ? Range.Inclusive(B.RangeMin, B.RangeMax) : Range.Exclusive(B.RangeMin, B.RangeMax);
 
-   return !(B.Inclusive ? A >= B.RangeMin && A <= B.RangeMax : A > B.RangeMin && A < B.RangeMax);
+    return !Range.Contains(A);
 }
 
 
@@ -192,15 +193,33 @@ void UK2Node_SwitchOnIntRanges::PostEditChangeProperty(FPropertyChangedEvent& Pr
 void UK2Node_SwitchOnIntRanges::ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const
 {
     Super::ValidateNodeDuringCompilation(MessageLog);
-	
-	
+
+     TArray<int> InvalidRangePinIndex;
     for (int32 Index = 0; Index < PinValues.Num(); ++Index)
     {
-        if (PinValues[Index].RangeMin > PinValues[Index].RangeMax)
+        TRange<float> Range = TRange<float>();
+        Range = PinValues[Index].Inclusive ? Range.Inclusive(PinValues[Index].RangeMin, PinValues[Index].RangeMax) : Range.Exclusive(PinValues[Index].RangeMin, PinValues[Index].RangeMax);
+
+        if (Range.IsEmpty())
         {
-			FString Message = FString::Printf(TEXT("@@ node contains invalid range in pin index [%d] "), Index);
-            MessageLog.Warning(*Message, this);
+            InvalidRangePinIndex.Add(Index);
+
+        }
+    }
+
+    if(InvalidRangePinIndex.Num() > 0)
+	{
+		FString WarningPins = TEXT("");
+        for (int32 Index = 0; Index < InvalidRangePinIndex.Num(); ++Index)
+		{
+                    WarningPins += FString::FromInt(InvalidRangePinIndex[Index]);
+                    if(Index < InvalidRangePinIndex.Num() - 1)
+					{
+						WarningPins += TEXT(", ");
+					}
 		}
+		MessageLog.Warning(*FText::Format(INVTEXT("@@ : Empty range detected in pin(s): {0}"), FText::FromString(WarningPins)).ToString(), this);
+
 	}
 }
 
