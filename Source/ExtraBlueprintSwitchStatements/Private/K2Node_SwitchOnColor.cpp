@@ -143,6 +143,7 @@ void UK2Node_SwitchOnColor::CreateCasePins()
          UEdGraphPin* Pin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinNames[Index]);
          Pin->bAllowFriendlyName = false;
          Pin->PinFriendlyName = FText::FromString(PinValues[Index].ToFColor(true).ToHex());
+         //Pin->
          Pin->SourceIndex = Index;
 
     }

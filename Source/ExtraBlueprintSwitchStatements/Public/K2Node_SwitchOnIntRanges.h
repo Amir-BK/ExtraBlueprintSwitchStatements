@@ -5,22 +5,22 @@
 #include "CoreMinimal.h"
 #include "K2Node.h"
 #include "K2Node_Switch.h"
-#include "K2Node_SwitchOnFloatRanges.generated.h"
+#include "K2Node_SwitchOnIntRanges.generated.h"
 
 /**
  * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the float to compare
  */
 
 USTRUCT(BlueprintType)
-struct FSwitchFloatRange
+struct FSwitchIntRange
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float RangeMax = 0.0f;
+	UPROPERTY(EditAnywhere, Category = PinOptions, meta = (NoSpinbox = true))
+	int RangeMax = 0;
 
 	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float RangeMin = 0.0f;
+	int RangeMin = 0;
 
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	bool Inclusive = true;
@@ -30,7 +30,7 @@ struct FSwitchFloatRange
  * 
  */
 UCLASS()
-class EXTRABLUEPRINTSWITCHSTATEMENTS_API UK2Node_SwitchOnFloatRanges : public UK2Node_Switch
+class EXTRABLUEPRINTSWITCHSTATEMENTS_API UK2Node_SwitchOnIntRanges : public UK2Node_Switch
 {
 	GENERATED_BODY()
 
@@ -41,9 +41,9 @@ public:
 
 	//This is the array that will hold the actual vector values for the pins, when the array is changed we will update the pins
 	UPROPERTY(EditAnywhere, Category = PinOptions)
-	TArray<FSwitchFloatRange> PinValues;
+	TArray<FSwitchIntRange> PinValues;
 
-	UK2Node_SwitchOnFloatRanges();
+	UK2Node_SwitchOnIntRanges();
 
 	//this method is used to register the node in the blueprint editor
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
@@ -51,7 +51,7 @@ public:
 
 
 	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsFloatNotWithinRange(float& A, FSwitchFloatRange& B);
+	static bool IsIntNotWithinRange(int& A, FSwitchIntRange& B);
 
 	//as we want to display the details view for the node we need to override this function and return true
 	virtual bool ShouldShowNodeProperties() const override { return true; }
