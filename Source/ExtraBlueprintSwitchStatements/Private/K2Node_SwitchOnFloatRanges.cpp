@@ -43,8 +43,11 @@ FText UK2Node_SwitchOnFloatRanges::GetNodeTitle(ENodeTitleType::Type TitleType) 
 
 bool UK2Node_SwitchOnFloatRanges::IsFloatNotWithinRange(float& A, FSwitchFloatRange& B)
 {
-
-   return !(B.Inclusive ? A >= B.RangeMin && A <= B.RangeMax : A > B.RangeMin && A < B.RangeMax);
+    TRange<float> Range = TRange<float>();
+    Range = B.Inclusive ? Range.Inclusive(B.RangeMin, B.RangeMax) : Range.Exclusive(B.RangeMin, B.RangeMax);
+ 
+    return !Range.Contains(A);
+  // return !(B.Inclusive ? A >= B.RangeMin && A <= B.RangeMax : A > B.RangeMin && A < B.RangeMax);
 }
 
 
@@ -195,9 +198,13 @@ void UK2Node_SwitchOnFloatRanges::ValidateNodeDuringCompilation(FCompilerResults
 
         for (int32 Index = 0; Index < PinValues.Num(); ++Index)
         {
-            if (PinValues[Index].RangeMin > PinValues[Index].RangeMax)
+            TRange<float> Range = TRange<float>();
+            Range = PinValues[Index].Inclusive ? Range.Inclusive(PinValues[Index].RangeMin, PinValues[Index].RangeMax) : Range.Exclusive(PinValues[Index].RangeMin, PinValues[Index].RangeMax);
+            UE_LOG(LogTemp, Warning, TEXT("RangeMin: %f"), PinValues[Index].RangeMin);
+           
+            if (Range.IsEmpty())
             {
-                FString Message = FString::Printf(TEXT("@@ node contains invalid range in pin index [%d] "), Index);
+                FString Message = FString::Printf(TEXT("@@ node contains an empty or invalid range in pin index [%d] "), Index);
                 MessageLog.Warning(*Message, this);
             }
         }

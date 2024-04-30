@@ -198,7 +198,7 @@ void UK2Node_SwitchOnIntRanges::ValidateNodeDuringCompilation(FCompilerResultsLo
     {
         if (PinValues[Index].RangeMin > PinValues[Index].RangeMax)
         {
-			FString Message = FString::Printf(TEXT("@@ Switch on Int Ranges node contains invalid range in pin index [%d] "), Index);
+			FString Message = FString::Printf(TEXT("@@ node contains invalid range in pin index [%d] "), Index);
             MessageLog.Warning(*Message, this);
 		}
 	}
