@@ -7,6 +7,16 @@
 #include "K2Node_Switch.h"
 #include "K2Node_SwitchOnColor.generated.h"
 
+
+UCLASS()
+class EXTRABLUEPRINTSWITCHSTATEMENTS_API USwitchOnColorGraphSchema : public	UEdGraphSchema_K2
+{
+	GENERATED_BODY()
+
+	virtual FLinearColor GetPinTypeColor(const FEdGraphPinType& PinType) const override;
+
+};
+
 /**
  * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the vector to compare
  */
@@ -43,7 +53,7 @@ public:
 	//The tolerance value for the comparison, passing this to the comparison function is a little tricky, we effectively tack it on to the
 	// case switch vector data in the form of a struct, this is done in the GetExportTextForPin function
 	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float Distance = 1.0f;
+	float Distance = 0.01f;
 
 	UPROPERTY()
 	bool UseAlpha = false;
