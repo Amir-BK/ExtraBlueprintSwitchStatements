@@ -74,24 +74,14 @@ public:
 		// Generate the entry point
 		FBlueprintCompiledStatement& EntryPoint = Context.AppendStatementForNode(Node);
 		EntryPoint.Type = KCST_Nop;
-		Context.StartLocation = &EntryPoint;
 
 		// Get the selection pin and term
 		UEdGraphPin* SelectionPin = SwitchNode->GetSelectionPin();
 		FBPTerminal* SelectionTerm = Context.NetMap.FindRef(SelectionPin);
 
-		// Track the previous case for jump linking
-		FBlueprintCompiledStatement* PrevCaseTest = nullptr;
-
 		for (int32 i = 0; i < SwitchNode->PinStructs.Num(); ++i)
 		{
 			if (!SwitchNode->PinStructs[i])
-			{
-				continue;
-			}
-
-			UEdGraphPin* CasePin = SwitchNode->FindPin(SwitchNode->PinStructs[i]->GetFName());
-			if (!CasePin || CasePin->LinkedTo.Num() == 0)
 			{
 				continue;
 			}
@@ -102,54 +92,67 @@ public:
 			BoolTerm->Source = Node;
 			BoolTerm->Name = Context.NetNameMap->MakeValidName(Node) + FString::Printf(TEXT("_Case_%d_Matches"), i);
 
-			// Generate the comparison
+
+			// Create comparison terminal for this case
+			FBPTerminal* ComparisonTerm = Context.CreateLocalTerminal();
+			ComparisonTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Boolean;
+			ComparisonTerm->Source = Node;
+			ComparisonTerm->Name = Context.NetNameMap->MakeValidName(Node) + FString::Printf(TEXT("_Comparison_%d"), i);
+
+			// Generate the comparison statement
 			FBlueprintCompiledStatement& CompareStmt = Context.AppendStatementForNode(Node);
 			CompareStmt.Type = KCST_CallFunction;
-			CompareStmt.FunctionToCall = FindField<UFunction>(UK2Node_SwitchInstancedStructType::StaticClass(), TEXT("CompareStructs"));
+			UFunction* CompareFunc = UK2Node_SwitchInstancedStructType::StaticClass()->FindFunctionByName(TEXT("CompareStructType"));
+			CompareStmt.FunctionToCall = CompareFunc;
 			CompareStmt.LHS = BoolTerm;
 			CompareStmt.RHS.Add(SelectionTerm);
 			CompareStmt.RHS.Add(Context.CreateLocalTerminal(ETerminalSpecification::TS_Literal));
 			CompareStmt.RHS.Last()->ObjectLiteral = SwitchNode->PinStructs[i];
+
+			// Add the struct type term
+			FBPTerminal* StructTypeTerm = Context.CreateLocalTerminal(ETerminalSpecification::TS_Literal);
+			StructTypeTerm->ObjectLiteral = SwitchNode->PinStructs[i];
+			StructTypeTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Object;
+			StructTypeTerm->Type.PinSubCategoryObject = UScriptStruct::StaticClass();
+			CompareStmt.RHS.Add(StructTypeTerm);
 
 			// Generate the conditional statement
 			FBlueprintCompiledStatement& CondStmt = Context.AppendStatementForNode(Node);
 			CondStmt.Type = KCST_GotoIfNot;
 			CondStmt.LHS = BoolTerm;
 
-			// Link to the next case
-			if (PrevCaseTest)
-			{
-				PrevCaseTest->TargetLabel = &CompareStmt;
-			}
-			PrevCaseTest = &CondStmt;
+			UEdGraphPin* ValuePin = SwitchNode->GetValuePin(i);
+			FBPTerminal* ValueTerm = Context.NetMap.FindRef(ValuePin);
 
-			// Generate the assignment if the case matches
-			if (UEdGraphPin* ValuePin = SwitchNode->GetValuePin(i))
+			if (ValueTerm && ValuePin)
 			{
-				if (FBPTerminal* ValueTerm = Context.NetMap.FindRef(ValuePin))
+				// Generate the struct copy statement (only if comparison succeeds)
+				FBlueprintCompiledStatement& CopyStmt = Context.AppendStatementForNode(Node);
+				CopyStmt.Type = KCST_Assignment;
+				CopyStmt.LHS = ValueTerm;
+				CopyStmt.RHS.Add(SelectionTerm);
+
+				// Generate the branch statement using the comparison result
+				UEdGraphPin* CasePin = SwitchNode->FindPin(SwitchNode->PinStructs[i]->GetFName());
+				if (CasePin && CasePin->LinkedTo.Num() > 0)
 				{
-					FBlueprintCompiledStatement& AssignStmt = Context.AppendStatementForNode(Node);
-					AssignStmt.Type = KCST_Assignment;
-					AssignStmt.LHS = ValueTerm;
-					AssignStmt.RHS.Add(SelectionTerm);
+					FBlueprintCompiledStatement& BranchStmt = Context.AppendStatementForNode(Node);
+					BranchStmt.Type = KCST_GotoIfNot;
+					BranchStmt.LHS = ComparisonTerm;  // Use the comparison result
+					Context.GotoFixupRequestMap.Add(&BranchStmt, CasePin);
 				}
 			}
-
-			// Add goto statement to the case execution
-			Context.GotoFixupRequestMap.Add(&CondStmt, CasePin);
 		}
 
 		// Handle default case
 		UEdGraphPin* DefaultPin = SwitchNode->GetDefaultPin();
 		if (DefaultPin && DefaultPin->LinkedTo.Num() > 0)
 		{
-			if (PrevCaseTest)
-			{
-				FBlueprintCompiledStatement& GotoDefault = Context.AppendStatementForNode(Node);
-				GotoDefault.Type = KCST_UnconditionalGoto;
-				Context.GotoFixupRequestMap.Add(&GotoDefault, DefaultPin);
-			}
+			FBlueprintCompiledStatement& GotoDefault = Context.AppendStatementForNode(Node);
+			GotoDefault.Type = KCST_UnconditionalGoto;
+			Context.GotoFixupRequestMap.Add(&GotoDefault, DefaultPin);
 		}
+	}
 };
 
 
