@@ -30,7 +30,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<UScriptStruct*> PinStructs;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintPure, Category = "Utility")
 	static bool NotEqual_StructType(UScriptStruct* A, UScriptStruct* B)
 	{
 		return A != B;

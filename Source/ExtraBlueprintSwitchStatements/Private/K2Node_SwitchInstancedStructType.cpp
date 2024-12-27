@@ -70,12 +70,17 @@ public:
 		FBPTerminal* SelectionTerm = *SelectionTermPtr;
 
 		//get the instanced struct from the selection pin's subcategory object
-
-		
-		// Get the struct type from the instanced struct
+		// Create the struct type terminal that will hold our results
 		FBPTerminal* StructTypeTerm = Context.CreateLocalTerminal();
 		StructTypeTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Object;
 		StructTypeTerm->Type.PinSubCategoryObject = UScriptStruct::StaticClass();
+		
+		// Get the struct type from the instanced struct
+		FBlueprintCompiledStatement& GetStructTypeStatement = Context.AppendStatementForNode(Node);
+		GetStructTypeStatement.Type = KCST_CallFunction;
+		GetStructTypeStatement.FunctionToCall = FindUField<UFunction>(SwitchNode->GetClass(), TEXT("GetStructTypeFromInstancedStruct"));
+		GetStructTypeStatement.RHS.Add(SelectionTerm);
+		GetStructTypeStatement.LHS = StructTypeTerm;
 
 		// For each case, compare the struct types
 		for (int32 PinIdx = 0; PinIdx < SwitchNode->PinStructs.Num(); PinIdx++)
@@ -94,15 +99,16 @@ public:
 			// Compare the structs
 			FBlueprintCompiledStatement& CompareStatement = Context.AppendStatementForNode(Node);
 			CompareStatement.Type = KCST_CallFunction;
-			CompareStatement.FunctionToCall = FindField<UFunction>(GetClass(), TEXT("NotEqual_StructType"));
-			CompareStatement.RHS.Add(SelectionTerm);
+			CompareStatement.FunctionToCall = FindUField<UFunction>(SwitchNode->GetClass(), TEXT("NotEqual_StructType"));
+			CompareStatement.RHS.Add(StructTypeTerm); // Use the extracted struct type
 			CompareStatement.RHS.Add(CaseStructTerm);
-			CompareStatement.LHS = StructTypeTerm;
+			CompareStatement.LHS = Context.CreateLocalTerminal(); // Create a bool term for the result
+			CompareStatement.LHS->Type.PinCategory = UEdGraphSchema_K2::PC_Boolean;
 
 			// Branch based on comparison
 			FBlueprintCompiledStatement& BranchStatement = Context.AppendStatementForNode(Node);
 			BranchStatement.Type = KCST_GotoIfNot;
-			BranchStatement.LHS = StructTypeTerm;
+			BranchStatement.LHS = CompareStatement.LHS; // Use the comparison result
 
 			UEdGraphPin* CaseExecPin = SwitchNode->FindPin(PinStruct->GetFName());
 			if (CaseExecPin && CaseExecPin->LinkedTo.Num() > 0)
