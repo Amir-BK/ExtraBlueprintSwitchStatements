@@ -30,11 +30,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<UScriptStruct*> PinStructs;
 
-	UFUNCTION(BlueprintPure, Category = "Switch")
-	static bool NotEqual_StructType(const FInstancedStruct& A, UScriptStruct* B)
+	UFUNCTION(BlueprintCallable, Category = "Switch")
+	static void CopyStructValue(const FInstancedStruct& Source, UPARAM(Ref) FInstancedStruct& Destination)
 	{
-		return A.GetScriptStruct() != B;
+		if (Source.GetMemory() && Source.GetScriptStruct())
+		{
+			Destination.InitializeAs(Source.GetScriptStruct());
+			FMemory::Memcpy(Destination.GetMutableMemory(), Source.GetMemory(), Source.GetScriptStruct()->GetStructureSize());
+		}
 	}
+
+	UFUNCTION(BlueprintPure, Category = "Switch", CustomThunk)
+	static bool NotEqual_StructType(const FInstancedStruct& A, UScriptStruct* B);
+
+	DECLARE_FUNCTION(execNotEqual_StructType);
 
 	UFUNCTION()
 	const UScriptStruct* GetStructTypeFromInstancedStruct(UPARAM(ref) const FInstancedStruct& InStruct) const
@@ -42,6 +51,12 @@ public:
 
 		return InStruct.GetScriptStruct();
 
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Switch")
+	static bool CompareStructs(const FInstancedStruct& A, UScriptStruct* B)
+	{
+		return A.GetScriptStruct() == B;
 	}
 
 	// Returns the value pin associated with the given case index
@@ -61,6 +76,7 @@ public:
 	// UK2Node interface
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual class FNodeHandlingFunctor* CreateNodeHandler(class FKismetCompilerContext& CompilerContext) const override;
+
 	// End of UK2Node interface
 
 	virtual void AddPinToSwitchNode() override;
@@ -71,6 +87,12 @@ public:
 	virtual FEdGraphPinType GetInnerCaseTypeForCaseIndex(int32 Index) const;
 
 	virtual FName GetPinNameGivenIndex(int32 Index) const override;
+
+	UFUNCTION()
+	static bool CompareStructType(const FInstancedStruct& InStruct, UScriptStruct* CompareType)
+	{
+		return InStruct.GetScriptStruct() == CompareType;
+	}
 
 protected:
 	virtual void CreateFunctionPin() override;
