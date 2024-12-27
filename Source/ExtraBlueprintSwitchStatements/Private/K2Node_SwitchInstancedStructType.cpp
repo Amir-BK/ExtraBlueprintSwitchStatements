@@ -41,37 +41,27 @@ public:
 		UK2Node_SwitchInstancedStructType* SwitchNode = CastChecked<UK2Node_SwitchInstancedStructType>(Node);
 
 		// Register the selection pin
+		FBPTerminal* SelectionTerm = Context.CreateLocalTerminal();
+		SelectionTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Struct;
+		SelectionTerm->Type.PinSubCategoryObject = FInstancedStruct::StaticStruct();
+		SelectionTerm->Source = Node;
+		SelectionTerm->Name = Context.NetNameMap->MakeValidName(Node) + TEXT("_Selection");
+
 		if (UEdGraphPin* SelectionPin = SwitchNode->GetSelectionPin())
 		{
-			FBPTerminal* SelectionTerm = Context.CreateLocalTerminal();
-			SelectionTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Struct;
-			SelectionTerm->Type.PinSubCategoryObject = FInstancedStruct::StaticStruct();
-			SelectionTerm->Source = Node;
-			SelectionTerm->Name = Context.NetNameMap->MakeValidName(Node) + TEXT("_Selection");
-
-			// Using FindUField instead of FindFProperty
-			SelectionTerm->AssociatedVarProperty = FInstancedStruct::StaticStruct()->FindPropertyByName(TEXT("ScriptStruct"));
-
-
-
-
 			Context.NetMap.Add(SelectionPin, SelectionTerm);
 		}
 
-		// Register nets for all case value pins
-		for (int32 Idx = 0; Idx < SwitchNode->PinStructs.Num(); ++Idx)
+		// Register output pins
+		for (int32 i = 0; i < SwitchNode->PinStructs.Num(); ++i)
 		{
-			if (UEdGraphPin* ValuePin = SwitchNode->GetValuePin(Idx))
+			if (UEdGraphPin* ValuePin = SwitchNode->GetValuePin(i))
 			{
-				FBPTerminal* ValueTerm = Context.CreateLocalTerminal();
-				ValueTerm->Type = ValuePin->PinType;
-				ValueTerm->Source = Node;
-				ValueTerm->Name = Context.NetNameMap->MakeValidName(ValuePin) + TEXT("_Value");
-				if (ValuePin->PinType.PinSubCategoryObject.IsValid())
-				{
-					ValueTerm->AssociatedVarProperty = CastField<FProperty>(ValuePin->PinType.PinSubCategoryObject.Get()->GetClass()->FindPropertyByName(TEXT("Value")));
-				}
-				Context.NetMap.Add(ValuePin, ValueTerm);
+				FBPTerminal* Term = Context.CreateLocalTerminal();
+				Term->Type = ValuePin->PinType;
+				Term->Source = Node;
+				Term->Name = Context.NetNameMap->MakeValidName(ValuePin) + TEXT("_Value");
+				Context.NetMap.Add(ValuePin, Term);
 			}
 		}
 	}
@@ -82,37 +72,36 @@ public:
 
 		// Create the entry point
 		FBlueprintCompiledStatement& EntryPoint = Context.AppendStatementForNode(Node);
-		//EntryPoint.Type = KCST_Nothing;
+		EntryPoint.Type = KCST_Nop;
 		Context.GotoFixupRequestMap.Add(&EntryPoint, SwitchNode->GetExecPin());
 
 		// Get the selection pin
 		UEdGraphPin* SelectionPin = SwitchNode->GetSelectionPin();
 		if (!SelectionPin)
 		{
-			CompilerContext.MessageLog.Error(*LOCTEXT("NoSelectionPin", "No selection pin found for @@").ToString(), Node);
+			CompilerContext.MessageLog.Error(TEXT("No selection pin found for @@"), Node);
 			return;
 		}
 
 		// Get selection term
 		UEdGraphPin* SelectionNet = FEdGraphUtilities::GetNetFromPin(SelectionPin);
 		FBPTerminal** SelectionTermPtr = Context.NetMap.Find(SelectionNet);
-		if (!SelectionTermPtr)
+		if (!SelectionTermPtr || !(*SelectionTermPtr))
 		{
-			CompilerContext.MessageLog.Error(*LOCTEXT("NoSelectionTerm", "Selection term not found for @@").ToString(), Node);
+			CompilerContext.MessageLog.Error(TEXT("Selection term not found for @@"), Node);
 			return;
 		}
 
-
-
-		// Store the selection term
 		FBPTerminal* SelectionTerm = *SelectionTermPtr;
 
-		if (!SelectionTerm->AssociatedVarProperty)
-		{
-			CompilerContext.MessageLog.Error(TEXT("Failed to find ScriptStruct property in FInstancedStruct"));
-		}
+		// Create a default term for the outputs
+		FBPTerminal* DefaultTerm = Context.CreateLocalTerminal(ETerminalSpecification::TS_Literal);
+		DefaultTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Object;
+		DefaultTerm->Type.PinSubCategoryObject = UScriptStruct::StaticClass();
+		DefaultTerm->Source = Node;
+		DefaultTerm->Name = Context.NetNameMap->MakeValidName(Node) + TEXT("_Default");
+		DefaultTerm->ObjectLiteral = nullptr;
 
-		// Create statements for each case
 		for (int32 i = 0; i < SwitchNode->PinStructs.Num(); ++i)
 		{
 			if (!SwitchNode->PinStructs[i])
@@ -120,21 +109,59 @@ public:
 				continue;
 			}
 
+			// Create output terminal for this case
+			FBPTerminal* OutputTerm = Context.CreateLocalTerminal();
+			OutputTerm->Type = SwitchNode->GetInnerCaseTypeForCaseIndex(i);
+			OutputTerm->Source = Node;
+			OutputTerm->Name = Context.NetNameMap->MakeValidName(Node) + FString::Printf(TEXT("_Output_%d"), i);
+
+			// Find the value pin for this case
+			UEdGraphPin* ValuePin = SwitchNode->GetValuePin(i);
+			if (ValuePin)
+			{
+				Context.NetMap.Add(ValuePin, OutputTerm);
+			}
+
 			// Create comparison statement
 			FBlueprintCompiledStatement& CompareStmt = Context.AppendStatementForNode(Node);
 			CompareStmt.Type = KCST_CallFunction;
-			CompareStmt.FunctionToCall = FindUField<UFunction>(UK2Node_SwitchInstancedStructType::StaticClass(), TEXT("GetStructTypeFromInstancedStruct"));
 
-			// Create and setup the comparison result terminal
+			UFunction* CompareFunc = UK2Node_SwitchInstancedStructType::StaticClass()->FindFunctionByName(TEXT("NotEqual_StructType"));
+			if (!CompareFunc)
+			{
+				CompilerContext.MessageLog.Error(TEXT("Failed to find NotEqual_StructType function for @@"), Node);
+				return;
+			}
+			CompareStmt.FunctionToCall = CompareFunc;
+
+			// Create comparison terminal
 			FBPTerminal* ComparisonTerm = Context.CreateLocalTerminal();
 			ComparisonTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Boolean;
+			ComparisonTerm->Type.PinSubCategory = NAME_None;
 			ComparisonTerm->Name = Context.NetNameMap->MakeValidName(Node) + FString::Printf(TEXT("_Case_%d_Matches"), i);
 			ComparisonTerm->Source = Node;
-			ComparisonTerm->AssociatedVarProperty = CastField<FProperty>(UKismetMathLibrary::StaticClass()->FindPropertyByName(TEXT("bReturnValue")));
+			ComparisonTerm->bIsLiteral = false;
 
+			// Get and set the return property
+			FBoolProperty* ReturnProp = CastField<FBoolProperty>(CompareFunc->GetReturnProperty());
+			if (!ReturnProp)
+			{
+				CompilerContext.MessageLog.Error(TEXT("Invalid or missing return property for NotEqual_StructType in @@"), Node);
+				return;
+			}
+			ComparisonTerm->AssociatedVarProperty = ReturnProp;
 
 			CompareStmt.LHS = ComparisonTerm;
 			CompareStmt.RHS.Add(SelectionTerm);
+
+			// Add the struct type with proper initialization
+			FBPTerminal* StructTypeTerm = Context.CreateLocalTerminal(ETerminalSpecification::TS_Literal);
+			StructTypeTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Object;
+			StructTypeTerm->Type.PinSubCategoryObject = UScriptStruct::StaticClass();
+			StructTypeTerm->Source = Node;
+			StructTypeTerm->Name = Context.NetNameMap->MakeValidName(Node) + FString::Printf(TEXT("_StructType_%d"), i);
+			StructTypeTerm->ObjectLiteral = SwitchNode->PinStructs[i];
+			CompareStmt.RHS.Add(StructTypeTerm);
 
 			// Generate conditional statement
 			UEdGraphPin* CasePin = SwitchNode->FindPin(SwitchNode->PinStructs[i]->GetFName());
@@ -175,7 +202,7 @@ UK2Node_SwitchInstancedStructType::UK2Node_SwitchInstancedStructType(const FObje
 	: Super(ObjectInitializer)
 {
 	FunctionName = TEXT("NotEqual_StructType");
-	FunctionClass = this->GetClass();
+	FunctionClass = this->GetClass();  // Keep this as your class
 	OrphanedPinSaveMode = ESaveOrphanPinMode::SaveNone;
 }
 
