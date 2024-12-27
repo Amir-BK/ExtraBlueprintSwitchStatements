@@ -12,6 +12,7 @@
 #include "KismetCompiledFunctionContext.h"
 #include "Internationalization/Internationalization.h"
 #include "Kismet2/CompilerResultsLog.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "KismetCompiledFunctionContext.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 
@@ -35,75 +36,74 @@ public:
 	{
 		UK2Node_SwitchInstancedStructType* SwitchNode = CastChecked<UK2Node_SwitchInstancedStructType>(Node);
 
-		// Get the execution and selection pins
-		UEdGraphPin* ExecPin = SwitchNode->GetExecPin();
+		// Get the selection pin
 		UEdGraphPin* SelectionPin = SwitchNode->GetSelectionPin();
-
-		if (!ExecPin || !SelectionPin)
+		if (!SelectionPin)
 		{
-			CompilerContext.MessageLog.Error(*LOCTEXT("NoExecOrSelectionPin", "@@ must have valid execution and selection pins").ToString(), Node);
+			CompilerContext.MessageLog.Error(*LOCTEXT("NoSelectionPin", "No selection pin found for @@").ToString(), Node);
 			return;
 		}
 
-		// Check for valid selection pin term
+		// Get selection term
 		UEdGraphPin* SelectionNet = FEdGraphUtilities::GetNetFromPin(SelectionPin);
 		FBPTerminal** SelectionTermPtr = Context.NetMap.Find(SelectionNet);
 		if (!SelectionTermPtr)
 		{
-			CompilerContext.MessageLog.Error(*LOCTEXT("NoSelectionTerm", "Failed to find selection term for @@").ToString(), Node);
+			CompilerContext.MessageLog.Error(*LOCTEXT("NoSelectionTerm", "Selection term not found for @@").ToString(), Node);
 			return;
 		}
-		FBPTerminal* SelectionTerm = *SelectionTermPtr;
 
-		// Generate the entry point
-		FBlueprintCompiledStatement& EntryPoint = Context.AppendStatementForNode(Node);
-		EntryPoint.Type = KCST_Nop;
-		Context.GotoFixupRequestMap.Add(&EntryPoint, ExecPin);
+		// Generate a temp variable to store the struct type
+		FBPTerminal* StructTypeTerm = Context.CreateLocalTerminal(ETerminalSpecification::TS_Literal);
+		StructTypeTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Object;
+		StructTypeTerm->Type.PinSubCategoryObject = UScriptStruct::StaticClass();
+		StructTypeTerm->Name = Context.NetNameMap->MakeValidName(Node) + TEXT("_StructType");
 
-		// Create a term for the struct type comparison function
-		FBPTerminal* FunctionContext = Context.CreateLocalTerminal();
-		FunctionContext->Type.PinCategory = UEdGraphSchema_K2::PC_Object;
-		FunctionContext->Type.PinSubCategoryObject = SwitchNode->GetClass();
-		FunctionContext->Name = TEXT("StructTypeSwitchContext");
-		FunctionContext->Type.bIsReference = true;
+		FBlueprintCompiledStatement& GetTypeStmt = Context.AppendStatementForNode(Node);
+		GetTypeStmt.Type = KCST_CallFunction;
+		GetTypeStmt.FunctionToCall = FindUField<UFunction>(UK2Node_SwitchInstancedStructType::StaticClass(), TEXT("GetStructTypeFromInstancedStruct"));
+		GetTypeStmt.LHS = StructTypeTerm;
+		GetTypeStmt.RHS.Add(*SelectionTermPtr);
 
-		// Create case statements for each struct type
-		for (UScriptStruct* PinStruct : SwitchNode->PinStructs)
+		// Store the results of the comparisons
+		TArray<FBPTerminal*> ComparisonTerms;
+
+		// Generate statements for each case
+		for (int32 i = 0; i < SwitchNode->PinStructs.Num(); ++i)
 		{
-			if (!PinStruct)
+			if (!SwitchNode->PinStructs[i])
 			{
 				continue;
 			}
 
-			// Create comparison function call
-			FBlueprintCompiledStatement& CompareStmt = Context.AppendStatementForNode(Node);
-			CompareStmt.Type = KCST_CallFunction;
-			CompareStmt.FunctionToCall = FindUField<UFunction>(SwitchNode->GetClass(), TEXT("GetStructTypeFromInstancedStruct"));
-			CompareStmt.FunctionContext = FunctionContext;
-			CompareStmt.RHS.Add(SelectionTerm);
-
-			// Create a term for the comparison result
+			// Create a terminal for the comparison result
 			FBPTerminal* ComparisonTerm = Context.CreateLocalTerminal();
 			ComparisonTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Boolean;
-			ComparisonTerm->Source = Node;
-			// Give it a meaningful name
-			ComparisonTerm->Name = TEXT("StructTypeComparison");
+			ComparisonTerm->Name = FString::Printf(TEXT("Case_%d_Matches"), i);
+			ComparisonTerms.Add(ComparisonTerm);
 
-			// Initialize the type more completely
-			ComparisonTerm->Type.PinSubCategory = NAME_None;
-			ComparisonTerm->Type.PinSubCategoryObject = nullptr; // This is okay for booleans
-			ComparisonTerm->Type.bIsReference = false;
-			ComparisonTerm->Type.bIsConst = false;
+			// Generate equality comparison
+			FBlueprintCompiledStatement& CompareStmt = Context.AppendStatementForNode(Node);
+			CompareStmt.Type = KCST_CallFunction;
+			CompareStmt.FunctionToCall = FindUField<UFunction>(UKismetMathLibrary::StaticClass(), TEXT("EqualEqual_ObjectObject"));
+			CompareStmt.LHS = ComparisonTerm;
+			CompareStmt.RHS.Add(StructTypeTerm);
 
-			// Find corresponding exec pin
-			UEdGraphPin* TargetPin = SwitchNode->FindPin(PinStruct->GetFName());
-			if (TargetPin && TargetPin->LinkedTo.Num() > 0)
+			// Add a literal for the case's struct type
+			FBPTerminal* CaseStructTerm = Context.CreateLocalTerminal(ETerminalSpecification::TS_Literal);
+			CaseStructTerm->Type.PinCategory = UEdGraphSchema_K2::PC_Object;
+			CaseStructTerm->Type.PinSubCategoryObject = UScriptStruct::StaticClass();
+			CaseStructTerm->ObjectLiteral = SwitchNode->PinStructs[i];
+			CompareStmt.RHS.Add(CaseStructTerm);
+
+			// Generate the conditional statement
+			UEdGraphPin* CasePin = SwitchNode->FindPin(SwitchNode->PinStructs[i]->GetFName());
+			if (CasePin && CasePin->LinkedTo.Num() > 0)
 			{
-				// Create conditional branch
-				FBlueprintCompiledStatement& BranchStmt = Context.AppendStatementForNode(Node);
-				BranchStmt.Type = KCST_GotoIfNot;
-				BranchStmt.LHS = ComparisonTerm;
-				Context.GotoFixupRequestMap.Add(&BranchStmt, TargetPin);
+				FBlueprintCompiledStatement& GotoStmt = Context.AppendStatementForNode(Node);
+				GotoStmt.Type = KCST_GotoIfNot;
+				GotoStmt.LHS = ComparisonTerm;
+				Context.GotoFixupRequestMap.Add(&GotoStmt, CasePin);
 			}
 		}
 
@@ -111,14 +111,14 @@ public:
 		UEdGraphPin* DefaultPin = SwitchNode->GetDefaultPin();
 		if (DefaultPin && DefaultPin->LinkedTo.Num() > 0)
 		{
-			FBlueprintCompiledStatement& DefaultGoto = Context.AppendStatementForNode(Node);
-			DefaultGoto.Type = KCST_UnconditionalGoto;
-			Context.GotoFixupRequestMap.Add(&DefaultGoto, DefaultPin);
+			FBlueprintCompiledStatement& GotoDefault = Context.AppendStatementForNode(Node);
+			GotoDefault.Type = KCST_UnconditionalGoto;
+			Context.GotoFixupRequestMap.Add(&GotoDefault, DefaultPin);
 		}
 
 		// Generate the exit point
-		FBlueprintCompiledStatement& ExitStatement = Context.AppendStatementForNode(Node);
-		ExitStatement.Type = KCST_EndOfThread;
+		FBlueprintCompiledStatement& Exit = Context.AppendStatementForNode(Node);
+		Exit.Type = KCST_EndOfThread;
 	}
 };
 
@@ -139,11 +139,6 @@ UK2Node_SwitchInstancedStructType::UK2Node_SwitchInstancedStructType(const FObje
 	OrphanedPinSaveMode = ESaveOrphanPinMode::SaveNone;
 }
 
-
-const UScriptStruct* UK2Node_SwitchInstancedStructType::GetStructTypeFromInstancedStruct(FInstancedStruct& InstancedStruct)
-{
-	return InstancedStruct.GetScriptStruct();
-}
 
 // In K2Node_SwitchInstancedStructType.cpp
 

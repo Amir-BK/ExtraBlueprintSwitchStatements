@@ -36,8 +36,13 @@ public:
 		return A != B;
 	}
 
-	UFUNCTION(BlueprintPure, Category = "Utility")
-	static const UScriptStruct* GetStructTypeFromInstancedStruct(FInstancedStruct& InstancedStruct);
+	UFUNCTION()
+	const UScriptStruct* GetStructTypeFromInstancedStruct(UPARAM(ref) const FInstancedStruct& InStruct) const
+	{
+
+		return InStruct.GetScriptStruct();
+
+	}
 
 	// Returns the value pin associated with the given case index
 	UEdGraphPin* GetValuePin(int32 CaseIndex) const;
