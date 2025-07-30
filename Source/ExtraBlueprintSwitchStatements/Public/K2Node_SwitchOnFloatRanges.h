@@ -51,7 +51,7 @@ public:
 
 
 	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsFloatNotWithinRange(float& A, FSwitchFloatRange& B);
+	static bool IsFloatNotWithinRange(double& A, FSwitchFloatRange& B);  // Changed from float& to double& to match PC_Real
 
 	//as we want to display the details view for the node we need to override this function and return true
 	virtual bool ShouldShowNodeProperties() const override { return true; }

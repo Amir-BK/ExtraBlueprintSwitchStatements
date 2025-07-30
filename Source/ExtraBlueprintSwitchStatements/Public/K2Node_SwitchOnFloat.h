@@ -53,7 +53,7 @@ public:
 
 
 	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsFloatWithToleranceNotNearlyEqual(float& A, FFloatAndTolerance& B);
+	static bool IsFloatWithToleranceNotNearlyEqual(double& A, FFloatAndTolerance& B); // Changed from float& to double& to match PC_Real
 
 	//as we want to display the details view for the node we need to override this function and return true
 	virtual bool ShouldShowNodeProperties() const override { return true; }
