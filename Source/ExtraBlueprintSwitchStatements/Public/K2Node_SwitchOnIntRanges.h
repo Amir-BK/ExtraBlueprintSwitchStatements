@@ -1,3 +1,5 @@
+// Copyright Amir Ben-Kiki 2025
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once

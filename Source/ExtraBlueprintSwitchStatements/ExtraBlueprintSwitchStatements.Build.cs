@@ -1,3 +1,5 @@
+// Copyright Amir Ben-Kiki 2025
+
 using UnrealBuildTool;
 
 public class ExtraBlueprintSwitchStatements : ModuleRules
