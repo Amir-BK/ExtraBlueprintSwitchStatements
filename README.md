@@ -18,3 +18,6 @@ Switch on Int array (allows switching on an arbitrary collection of ints rather 
 Custom blueprint nodes which inherit from K2Node_Switch and extend it.
 
 K2Node_Switch creates a map of 'boolterms' that map between the output execution pins and functions that can be evaluated to a boolean, when the default node is shown and connected all other state[...]
+
+# Community/Feedback/Support -  
+Please join the discord server - https://discord.gg/hTKjSfcbEn
