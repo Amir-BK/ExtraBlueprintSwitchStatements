@@ -8,8 +8,9 @@
 	"CreatedBy": "Amir Ben-Kiki",
 	"CreatedByURL": "",
 	"DocsURL": "https://github.com/Amir-BK/ExtraBlueprintSwitchStatements",
-	"MarketplaceURL": "",
-	"SupportURL": "",
+	"MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/45808794-703a-4a80-96e7-20b90d63bc2c",
+	"SupportURL": "https://discord.gg/afujBSSf",
+	"EngineVersion": "5.6",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
@@ -18,13 +19,12 @@
 		{
 			"Name": "ExtraBlueprintSwitchStatements",
 			"Type": "UncookedOnly",
-			"LoadingPhase": "Default"
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "StructUtils",
-			"Enabled": true
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Mac",
+				"Linux"
+			]
 		}
 	]
 }

@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Amir Ben-Kiki 2025
 
 #pragma once
 

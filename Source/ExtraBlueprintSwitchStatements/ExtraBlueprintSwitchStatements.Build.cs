@@ -37,7 +37,6 @@ public class ExtraBlueprintSwitchStatements : ModuleRules
 				"Engine",
                  "BlueprintGraph",
 				 "UnrealEd",
-				 "StructUtils",
                  "KismetCompiler",
 				// ... add private dependencies that you statically link with here ...	
 			}

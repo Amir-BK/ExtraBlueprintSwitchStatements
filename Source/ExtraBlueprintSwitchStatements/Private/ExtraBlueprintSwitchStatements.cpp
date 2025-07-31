@@ -1,3 +1,5 @@
+// Copyright Amir Ben-Kiki 2025
+
 #include "ExtraBlueprintSwitchStatements.h"
 
 #define LOCTEXT_NAMESPACE "FExtraBlueprintSwitchStatementsModule"
