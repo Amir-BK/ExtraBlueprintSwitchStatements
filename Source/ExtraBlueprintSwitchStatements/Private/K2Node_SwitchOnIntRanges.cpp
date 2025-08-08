@@ -14,15 +14,16 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "K2Node_VariableGet.h"
 #include "Engine/Engine.h"
+#include "ExtraSwitchComparatorsFunctionLibrary.h"
 
 // Simple log category
 DEFINE_LOG_CATEGORY_STATIC(LogSwitchOnIntRanges, Log, All);
 
 UK2Node_SwitchOnIntRanges::UK2Node_SwitchOnIntRanges()
 {
-    // Set the default function name and class, this is the function that will be called when the switch is executed, if it returns true the output pin will be executed
+    // Set the function name and class to use the static function from ExtraSwitchComparatorsFunctionLibrary
     FunctionName = TEXT("IsIntNotWithinRange");
-    FunctionClass = UK2Node_SwitchOnIntRanges::StaticClass();
+    FunctionClass = UExtraSwitchComparatorsFunctionLibrary::StaticClass();
     UE_LOG(LogSwitchOnIntRanges, Log, TEXT("SwitchOnIntRanges created"));
 }
 
@@ -45,25 +46,8 @@ FText UK2Node_SwitchOnIntRanges::GetNodeTitle(ENodeTitleType::Type TitleType) co
 
 bool UK2Node_SwitchOnIntRanges::IsIntNotWithinRange(int& A, FSwitchIntRange& B)
 {
-    // Log the input values for debugging
-    UE_LOG(LogSwitchOnIntRanges, Warning, TEXT("IsIntNotWithinRange CALLED - A=%d, Range=(%d,%d), Inclusive=%s"), 
-        A, B.RangeMin, B.RangeMax, B.Inclusive ? TEXT("true") : TEXT("false"));
-        
-    // Create the range
-    TRange<int> Range = TRange<int>();
-    Range = B.Inclusive ? Range.Inclusive(B.RangeMin, B.RangeMax) : Range.Exclusive(B.RangeMin, B.RangeMax);
-    
-    // Check if the value is NOT within the range (return true to skip this pin in the UK2Node_Switch)
-    bool bContains = Range.Contains(A);
-    bool bNotWithinRange = !bContains;
-    
-    UE_LOG(LogSwitchOnIntRanges, Warning, TEXT("  - Range%s=(%d,%d), Value=%d, Contains=%s, Result=%s"),
-        B.Inclusive ? TEXT("[inclusive]") : TEXT("(exclusive)"), 
-        B.RangeMin, B.RangeMax, A, 
-        bContains ? TEXT("true") : TEXT("false"), 
-        bNotWithinRange ? TEXT("true") : TEXT("false"));
-    
-    return bNotWithinRange;
+    // Delegate to the function library implementation
+    return UExtraSwitchComparatorsFunctionLibrary::IsIntNotWithinRange(A, B.RangeMin, B.RangeMax, B.Inclusive);
 }
 
 inline FText UK2Node_SwitchOnIntRanges::GetTooltipText() const

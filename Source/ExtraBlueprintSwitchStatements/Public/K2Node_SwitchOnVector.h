@@ -5,28 +5,8 @@
 #include "CoreMinimal.h"
 #include "K2Node.h"
 #include "K2Node_Switch.h"
+#include "ExtraSwitchComparatorsFunctionLibrary.h" // Include the function library to access FVectorAndTolerance
 #include "K2Node_SwitchOnVector.generated.h"
-
-/**
- * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the vector to compare
- */
-USTRUCT(BlueprintType)
-struct FVectorAndTolerance
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	float X = 0.0f;
-
-	UPROPERTY()
-	float Y = 0.0f;
-
-	UPROPERTY()
-	float Z = 0.f;
-
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float Tolerance = 0.1f;
-};
 
 /**
  * 
@@ -35,7 +15,6 @@ UCLASS()
 class EXTRABLUEPRINTSWITCHSTATEMENTS_API UK2Node_SwitchOnVector : public UK2Node_Switch
 {
 	GENERATED_BODY()
-
 
 public:
 	UPROPERTY()
@@ -50,6 +29,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	float Tolerance = 0.1f;
 
+	// Array of additional literals to pass to the function (used for tolerance parameter)
+	TArray<FString> PinLiterals;
 
 	UK2Node_SwitchOnVector();
 
@@ -57,7 +38,7 @@ public:
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
-
+	// Legacy function signature - maintained for backward compatibility only
 	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsVectorWithToleranceNotNearlyEqual(FVector& A, FVectorAndTolerance& B);
 
@@ -91,4 +72,9 @@ public:
 	//End of K2Node_Switch Interface
 
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
+	// Additional validation during compilation, useful for debugging issues
+	virtual void ValidateNodeDuringCompilation(class FCompilerResultsLog& MessageLog) const override;
+
+	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 };

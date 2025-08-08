@@ -16,5 +16,7 @@ public class ExtraSwitchStatementsRuntime : ModuleRules
 				"Engine",
 			}
 		);
+		PublicIncludePaths.AddRange(new string[] { "Plugins/ExtraBlueprintSwitchStatements/Source/ExtraSwitchStatementsRuntime/Public" });
+		PrivateIncludePaths.AddRange(new string[] { "Plugins/ExtraBlueprintSwitchStatements/Source/ExtraSwitchStatementsRuntime/Private" });
 	}
 }

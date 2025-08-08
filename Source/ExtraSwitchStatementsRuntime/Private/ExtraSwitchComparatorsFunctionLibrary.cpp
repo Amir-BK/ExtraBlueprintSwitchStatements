@@ -124,6 +124,51 @@ bool UExtraSwitchComparatorsFunctionLibrary::IsFloatNotWithinRange(float A, cons
     return bNotWithinRange;  // Return true when value is NOT within range (so UK2Node_Switch skips this pin)
 }
 
+bool UExtraSwitchComparatorsFunctionLibrary::IsVectorWithToleranceNotNearlyEqual(const FVector& A, const FVectorAndTolerance& B)
+{
+    FVector BVector(B.X, B.Y, B.Z);
+    float Distance = FVector::Dist(A, BVector);
+    bool Result = Distance > B.Tolerance;
+
+    UE_LOG(LogExtraSwitch, Warning, TEXT("IsVectorWithToleranceNotNearlyEqual CALLED - A(%f,%f,%f), B(%f,%f,%f), Tolerance=%f, Distance=%f, Result=%s"),
+        A.X, A.Y, A.Z, B.X, B.Y, B.Z, B.Tolerance, Distance, Result ? TEXT("true") : TEXT("false"));
+
+    // Display on screen if in editor or debug build
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, 
+            FString::Printf(TEXT("VectorCompare: Dist=%f, Tol=%f, Result=%s"),
+                Distance, B.Tolerance, Result ? TEXT("NOT EQUAL") : TEXT("EQUAL")));
+    }
+
+    return Result;
+}
+
+bool UExtraSwitchComparatorsFunctionLibrary::IsIntNotWithinRange(int32 A, int32 RangeMin, int32 RangeMax, bool Inclusive)
+{
+    // Create range object
+    TRange<int32> Range = TRange<int32>();
+    Range = Inclusive ? Range.Inclusive(RangeMin, RangeMax) : Range.Exclusive(RangeMin, RangeMax);
+    
+    bool bContains = Range.Contains(A);
+    bool bNotWithinRange = !bContains;  // UK2Node_Switch skips pins that return true, so we want true when NOT in range
+    
+    UE_LOG(LogExtraSwitch, Warning, TEXT("IsIntNotWithinRange CALLED - A=%d, RangeMin=%d, RangeMax=%d, Inclusive=%s, Result=%s"),
+        A, RangeMin, RangeMax, Inclusive ? TEXT("true") : TEXT("false"), bNotWithinRange ? TEXT("true") : TEXT("false"));
+
+    // Display on screen if in editor or debug build
+    if (GEngine)
+    {
+        FString rangeType = Inclusive ? TEXT("[inclusive]") : TEXT("(exclusive)");
+        GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, 
+            FString::Printf(TEXT("IntRangeCheck: Value=%d, Range%s=(%d,%d), Result=%s"),
+                A, *rangeType, RangeMin, RangeMax, 
+                bNotWithinRange ? TEXT("NOT IN RANGE") : TEXT("IN RANGE")));
+    }
+
+    return bNotWithinRange;
+}
+
 void UExtraSwitchComparatorsFunctionLibrary::DebugLog(const FString& Message, bool bPrintToScreen)
 {
     UE_LOG(LogExtraSwitch, Display, TEXT("%s"), *Message);

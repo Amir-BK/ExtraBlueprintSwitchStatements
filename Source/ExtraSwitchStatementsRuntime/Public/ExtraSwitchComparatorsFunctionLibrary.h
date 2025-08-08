@@ -6,6 +6,28 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ExtraSwitchComparatorsFunctionLibrary.generated.h"
 
+
+/**
+ * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the vector to compare
+ */
+USTRUCT(BlueprintType)
+struct FVectorAndTolerance
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float X = 0.0f;
+
+	UPROPERTY()
+	float Y = 0.0f;
+
+	UPROPERTY()
+	float Z = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = PinOptions)
+	float Tolerance = 0.1f;
+};
+
 /**
  * This struct is used to pass additional data to the comparison function for color comparisons
  */
@@ -99,6 +121,27 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
 	static bool IsFloatNotWithinRange(float A, const FExtraSwitchFloatRange& B);
 	
+	/**
+	 * Compares a vector with a vector and tolerance structure
+	 * This overload is specifically for compatibility with the K2Node_SwitchOnVector node
+	 * @param A - The vector to compare
+	 * @param B - The target vector and tolerance structure
+	 * @return True if vectors are NOT nearly equal (exceeds tolerance)
+	 */
+	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
+	static bool IsVectorWithToleranceNotNearlyEqual(const FVector& A, const FVectorAndTolerance& B);
+
+	/**
+	 * Checks if an integer is NOT within a specified range
+	 * @param A - The integer to check
+	 * @param RangeMin - The minimum value of the range
+	 * @param RangeMax - The maximum value of the range
+	 * @param Inclusive - Whether the range is inclusive or exclusive
+	 * @return True if the integer is NOT within the range
+	 */
+	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
+	static bool IsIntNotWithinRange(int32 A, int32 RangeMin, int32 RangeMax, bool Inclusive);
+
 	/** 
 	 * Simple log function for debugging in Blueprint
 	 * @param Message - The message to log
@@ -125,7 +168,7 @@ public:
 	 * @param VariableName - Optional name to identify the variable in logs
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Switch Comparisons|Debug")
-	static void DebugFloatValue(float Value, FString VariableName = TEXT("Unknown"));
+ static void DebugFloatValue(float Value, FString VariableName = TEXT("Unknown"));
 
     /**
 	 * Logs the current value of a color variable to help debug switch nodes
