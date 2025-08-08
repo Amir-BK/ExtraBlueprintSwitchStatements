@@ -6,6 +6,23 @@
 // Simple log category definition
 DEFINE_LOG_CATEGORY_STATIC(LogExtraSwitch, Log, All);
 
+
+bool UExtraSwitchComparatorsFunctionLibrary::AreIntsNotEqual(int32 A, int32 B)
+{
+    UE_LOG(LogExtraSwitch, Warning, TEXT("AreIntsNotEqual CALLED - A=%d, B=%d"), A, B);
+
+    // Return TRUE to SKIP this path (when values don't match)
+    // Return FALSE to EXECUTE this path (when values match)
+    bool Result = (A != B);
+
+    UE_LOG(LogExtraSwitch, Warning, TEXT("  - Result=%s (%s - path will be %s)"),
+        Result ? TEXT("true") : TEXT("false"),
+        Result ? TEXT("not equal") : TEXT("equal"),
+        Result ? TEXT("SKIPPED") : TEXT("EXECUTED"));
+
+    return Result;
+}
+
 bool UExtraSwitchComparatorsFunctionLibrary::IsColorWithToleranceNotNearlyEqual(const FLinearColor& A, const FColorAndTolerance& B)
 {
     float temp = FLinearColor::Dist(A, B.Color);

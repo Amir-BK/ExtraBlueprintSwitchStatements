@@ -25,10 +25,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<int> PinValues;
 
-	// Use int32 for both parameters, matching SwitchOnInt
-	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool AreIntsNotEqual(int32 A, int32 B);
-
 	UK2Node_SwitchOnIntArray();
 
 	//this method is used to register the node in the blueprint editor

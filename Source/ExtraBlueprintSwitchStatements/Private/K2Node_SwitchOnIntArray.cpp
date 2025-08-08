@@ -16,32 +16,18 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "K2Node_VariableGet.h"
 #include "Logging/LogMacros.h"
+#include "ExtraSwitchComparatorsFunctionLibrary.h"
 #include "Engine/Engine.h"
 
 // Simple log category
 DEFINE_LOG_CATEGORY_STATIC(LogSwitchOnIntArray, Log, All);
 
-bool UK2Node_SwitchOnIntArray::AreIntsNotEqual(int32 A, int32 B)
-{
-    UE_LOG(LogSwitchOnIntArray, Warning, TEXT("AreIntsNotEqual CALLED - A=%d, B=%d"), A, B);
-
-    // Return TRUE to SKIP this path (when values don't match)
-    // Return FALSE to EXECUTE this path (when values match)
-    bool Result = (A != B);
-
-    UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Result=%s (%s - path will be %s)"),
-        Result ? TEXT("true") : TEXT("false"),
-        Result ? TEXT("not equal") : TEXT("equal"),
-        Result ? TEXT("SKIPPED") : TEXT("EXECUTED"));
-
-    return Result;
-}
 
 UK2Node_SwitchOnIntArray::UK2Node_SwitchOnIntArray()
 {
     //Set the default function name and class, this is the function that will be called when the switch is executed, if it returns true the output pin will be executed
     FunctionName = TEXT("AreIntsNotEqual");
-    FunctionClass = UK2Node_SwitchOnIntArray::StaticClass();
+    FunctionClass = UExtraSwitchComparatorsFunctionLibrary::StaticClass();
     UE_LOG(LogSwitchOnIntArray, Log, TEXT("SwitchOnIntArray created"));
 }
 

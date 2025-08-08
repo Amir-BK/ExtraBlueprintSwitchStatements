@@ -134,4 +134,10 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Switch Comparisons|Debug")
 	static void DebugColorValue(FLinearColor Value, FString VariableName = TEXT("Unknown"));
+
+
+	// Use int32 for both parameters, matching SwitchOnInt
+	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
+	static bool AreIntsNotEqual(int32 A, int32 B);
+
 };
