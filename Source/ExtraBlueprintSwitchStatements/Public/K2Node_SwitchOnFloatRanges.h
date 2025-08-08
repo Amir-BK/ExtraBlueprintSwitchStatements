@@ -5,26 +5,8 @@
 #include "CoreMinimal.h"
 #include "K2Node.h"
 #include "K2Node_Switch.h"
+#include "ExtraSwitchComparatorsFunctionLibrary.h"
 #include "K2Node_SwitchOnFloatRanges.generated.h"
-
-/**
- * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the float to compare
- */
-
-USTRUCT(BlueprintType)
-struct FSwitchFloatRange
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float RangeMax = 0.0f;
-
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float RangeMin = 0.0f;
-
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	bool Inclusive = true;
-};
 
 /**
  * 
@@ -41,7 +23,7 @@ public:
 
 	//This is the array that will hold the actual vector values for the pins, when the array is changed we will update the pins
 	UPROPERTY(EditAnywhere, Category = PinOptions)
-	TArray<FSwitchFloatRange> PinValues;
+	TArray<FExtraSwitchFloatRange> PinValues;
 
 	UK2Node_SwitchOnFloatRanges();
 
@@ -49,18 +31,12 @@ public:
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
-
-	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsFloatNotWithinRange(double& A, FSwitchFloatRange& B);  // Changed from float& to double& to match PC_Real
-
 	//as we want to display the details view for the node we need to override this function and return true
 	virtual bool ShouldShowNodeProperties() const override { return true; }
 
 	FText GetTooltipText() const override;
 
 	//K2Node_Switch Interface
-
-
 	virtual void CreateSelectionPin() override;
 
 	//I don't think this one is actually being used
@@ -83,4 +59,6 @@ public:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 
 	virtual void ValidateNodeDuringCompilation(class FCompilerResultsLog& MessageLog) const override;
+	
+	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 };

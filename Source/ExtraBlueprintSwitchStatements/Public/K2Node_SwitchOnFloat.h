@@ -5,22 +5,8 @@
 #include "CoreMinimal.h"
 #include "K2Node.h"
 #include "K2Node_Switch.h"
+#include "ExtraSwitchComparatorsFunctionLibrary.h"
 #include "K2Node_SwitchOnFloat.generated.h"
-
-/**
- * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the float to compare
- */
-USTRUCT(BlueprintType)
-struct FFloatAndTolerance
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	float value = 0.0f;
-
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	float Tolerance = 0.1f;
-};
 
 /**
  * 
@@ -35,15 +21,13 @@ public:
 	UPROPERTY()
 	TArray<FName> PinNames;
 
-	//This is the array that will hold the actual vector values for the pins, when the array is changed we will update the pins
+	//This is the array that will hold the actual float values for the pins, when the array is changed we will update the pins
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<float> PinValues;
 
-	//The tolerance value for the comparison, passing this to the comparison function is a little tricky, we effectively tack it on to the
-	// case switch float data in the form of a struct, this is done in the GetExportTextForPin function
-	UPROPERTY(EditAnywhere, Category = PinOptions)
+	//The tolerance value for float comparison
+	UPROPERTY(EditAnywhere, Category = Tolerance)
 	float Tolerance = 0.1f;
-
 
 	UK2Node_SwitchOnFloat();
 
@@ -51,18 +35,12 @@ public:
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
-
-	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsFloatWithToleranceNotNearlyEqual(double& A, FFloatAndTolerance& B); // Changed from float& to double& to match PC_Real
-
 	//as we want to display the details view for the node we need to override this function and return true
 	virtual bool ShouldShowNodeProperties() const override { return true; }
 
 	FText GetTooltipText() const override;
 
 	//K2Node_Switch Interface
-
-
 	virtual void CreateSelectionPin() override;
 
 	//I don't think this one is actually being used
@@ -83,4 +61,10 @@ public:
 	//End of K2Node_Switch Interface
 
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+    
+    // Debug functions
+    virtual void ValidateNodeDuringCompilation(class FCompilerResultsLog& MessageLog) const override;
+    
+    // Added missing ExpandNode declaration
+    virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 };

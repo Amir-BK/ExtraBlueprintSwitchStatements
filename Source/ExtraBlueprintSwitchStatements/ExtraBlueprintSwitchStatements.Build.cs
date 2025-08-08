@@ -26,7 +26,7 @@ public class ExtraBlueprintSwitchStatements : ModuleRules
 			new string[]
 			{
 				"Core",
-               
+				"ExtraSwitchStatementsRuntime",  // Add dependency on the runtime module
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -37,9 +37,9 @@ public class ExtraBlueprintSwitchStatements : ModuleRules
 			{
                 "CoreUObject",
 				"Engine",
-                 "BlueprintGraph",
-				 "UnrealEd",
-                 "KismetCompiler",
+                "BlueprintGraph",
+				"UnrealEd",
+                "KismetCompiler",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

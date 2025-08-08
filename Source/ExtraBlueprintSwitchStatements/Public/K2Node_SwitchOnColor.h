@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "K2Node.h"
 #include "K2Node_Switch.h"
+#include "ExtraSwitchComparatorsFunctionLibrary.h"
 #include "K2Node_SwitchOnColor.generated.h"
 
 
@@ -15,21 +16,6 @@ class EXTRABLUEPRINTSWITCHSTATEMENTS_API USwitchOnColorGraphSchema : public	UEdG
 
 	virtual FLinearColor GetPinTypeColor(const FEdGraphPinType& PinType) const override;
 
-};
-
-/**
- * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the vector to compare
- */
-USTRUCT(BlueprintType)
-struct FColorAndTolerance
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FLinearColor Color;
-
-	UPROPERTY()
-	float Tolerance = 0.1f;
 };
 
 /**
@@ -66,13 +52,6 @@ public:
 	//this method is used to register the node in the blueprint editor
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
-
-
-	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsColorWithToleranceNotNearlyEqualNoAlpha(FLinearColor& A, FColorAndTolerance& B);
-
-	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsColorWithToleranceNotNearlyEqual(FLinearColor& A, FColorAndTolerance& B);
 
 	//as we want to display the details view for the node we need to override this function and return true
 	virtual bool ShouldShowNodeProperties() const override { return true; }

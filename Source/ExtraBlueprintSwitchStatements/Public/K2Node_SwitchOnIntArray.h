@@ -25,8 +25,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = PinOptions)
 	TArray<int> PinValues;
 
+	// Use int32 for both parameters, matching SwitchOnInt
 	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool AreIntsNotEqual(int& A, int& B);
+	static bool AreIntsNotEqual(int32 A, int32 B);
 
 	UK2Node_SwitchOnIntArray();
 
@@ -63,4 +64,10 @@ public:
 	//End of K2Node_Switch Interface
 
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
+	// Added missing ExpandNode declaration
+	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+
+	// Add validation during compilation
+	virtual void ValidateNodeDuringCompilation(class FCompilerResultsLog& MessageLog) const override;
 };
