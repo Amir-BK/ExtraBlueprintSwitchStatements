@@ -214,12 +214,5 @@ void UK2Node_SwitchOnVector::ValidateNodeDuringCompilation(FCompilerResultsLog& 
     }
 }
 
-void UK2Node_SwitchOnVector::ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
-{
-    UE_LOG(LogSwitchOnVector, Warning, TEXT("ExpandNode called for vector switch"));
-
-    // Call the parent implementation to do the actual expansion
-    Super::ExpandNode(CompilerContext, SourceGraph);
-}
 
 

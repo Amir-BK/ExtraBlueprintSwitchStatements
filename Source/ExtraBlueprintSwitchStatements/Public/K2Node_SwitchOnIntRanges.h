@@ -7,26 +7,9 @@
 #include "CoreMinimal.h"
 #include "K2Node.h"
 #include "K2Node_Switch.h"
+#include "ExtraSwitchComparatorsFunctionLibrary.h"
 #include "K2Node_SwitchOnIntRanges.generated.h"
 
-/**
- * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the float to compare
- */
-
-USTRUCT(BlueprintType)
-struct FSwitchIntRange
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = PinOptions, meta = (NoSpinbox = true))
-	int RangeMax = 0;
-
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	int RangeMin = 0;
-
-	UPROPERTY(EditAnywhere, Category = PinOptions)
-	bool Inclusive = true;
-};
 
 /**
  * 
@@ -52,8 +35,7 @@ public:
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
 
-	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
-	static bool IsIntNotWithinRange(int& A, FSwitchIntRange& B);
+
 
 	//as we want to display the details view for the node we need to override this function and return true
 	virtual bool ShouldShowNodeProperties() const override { return true; }
@@ -85,5 +67,4 @@ public:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 
 	virtual void ValidateNodeDuringCompilation(class FCompilerResultsLog& MessageLog) const override;
-	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 };

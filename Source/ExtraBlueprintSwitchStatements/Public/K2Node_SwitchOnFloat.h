@@ -61,10 +61,5 @@ public:
 	//End of K2Node_Switch Interface
 
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-    
-    // Debug functions
-    virtual void ValidateNodeDuringCompilation(class FCompilerResultsLog& MessageLog) const override;
-    
-    // Added missing ExpandNode declaration
-    virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+
 };

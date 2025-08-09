@@ -76,6 +76,26 @@ struct EXTRASWITCHSTATEMENTSRUNTIME_API FExtraSwitchFloatRange
 	bool Inclusive = true;
 };
 
+
+/**
+ * This struct is used to pass additional data to the comparison function, the comparison function is static and takes two arguments, the first is the float to compare
+ */
+
+USTRUCT(BlueprintType)
+struct FSwitchIntRange
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = PinOptions, meta = (NoSpinbox = true))
+	int RangeMax = 0;
+
+	UPROPERTY(EditAnywhere, Category = PinOptions)
+	int RangeMin = 0;
+
+	UPROPERTY(EditAnywhere, Category = PinOptions)
+	bool Inclusive = true;
+};
+
 /**
  * Blueprint Function Library containing the comparator functions used by the ExtraBlueprintSwitchStatements plugin
  */
@@ -91,7 +111,7 @@ public:
 	 * @param B - The target color and tolerance
 	 * @return True if colors are NOT nearly equal (exceeds tolerance)
 	 */
-	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
+	UFUNCTION(BlueprintPure, Category = "Switch Comparisons", meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsColorWithToleranceNotNearlyEqual(const FLinearColor& A, const FColorAndTolerance& B);
 
 	/**
@@ -100,7 +120,7 @@ public:
 	 * @param B - The target color and tolerance
 	 * @return True if colors are NOT nearly equal (exceeds tolerance)
 	 */
-	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
+	UFUNCTION(BlueprintPure, Category = "Switch Comparisons", meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsColorWithToleranceNotNearlyEqualNoAlpha(const FLinearColor& A, const FColorAndTolerance& B);
 
 	/**
@@ -109,7 +129,7 @@ public:
 	 * @param B - The target float and tolerance
 	 * @return True if floats are NOT nearly equal (exceeds tolerance)
 	 */
-	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
+	UFUNCTION(BlueprintPure, Category = "Switch Comparisons", meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsFloatWithToleranceNotNearlyEqual(float A, const FFloatAndTolerance& B);
 
 	/**
@@ -118,7 +138,7 @@ public:
 	 * @param B - The range to check against
 	 * @return True if the float is NOT within the range
 	 */
-	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
+	UFUNCTION(BlueprintPure, Category = "Switch Comparisons", meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsFloatNotWithinRange(float A, const FExtraSwitchFloatRange& B);
 	
 	/**
@@ -128,55 +148,12 @@ public:
 	 * @param B - The target vector and tolerance structure
 	 * @return True if vectors are NOT nearly equal (exceeds tolerance)
 	 */
-	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
+	UFUNCTION(BlueprintPure, Category = "Switch Comparisons", meta = (BlueprintInternalUseOnly = "TRUE"))
 	static bool IsVectorWithToleranceNotNearlyEqual(const FVector& A, const FVectorAndTolerance& B);
 
-	/**
-	 * Checks if an integer is NOT within a specified range
-	 * @param A - The integer to check
-	 * @param RangeMin - The minimum value of the range
-	 * @param RangeMax - The maximum value of the range
-	 * @param Inclusive - Whether the range is inclusive or exclusive
-	 * @return True if the integer is NOT within the range
-	 */
-	UFUNCTION(BlueprintPure, Category = "Switch Comparisons")
-	static bool IsIntNotWithinRange(int32 A, int32 RangeMin, int32 RangeMax, bool Inclusive);
 
-	/** 
-	 * Simple log function for debugging in Blueprint
-	 * @param Message - The message to log
-	 * @param bPrintToScreen - Whether to display the message on screen
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Switch Comparisons|Debug")
-	static void DebugLog(const FString& Message, bool bPrintToScreen = true);
-
-	/**
-	 * Test float comparison with direct values
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Switch Comparisons|Debug")
-	static bool TestFloatComparison(float A, float B, float Tolerance = 0.1f);
-	
-	/**
-	 * Test color comparison with direct values
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Switch Comparisons|Debug")
-	static bool TestColorComparison(FLinearColor A, FLinearColor B, float Tolerance = 0.1f, bool bUseAlpha = true);
-    
-    /**
-	 * Logs the current value of a float variable to help debug switch nodes
-	 * @param Value - The float value to log
-	 * @param VariableName - Optional name to identify the variable in logs
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Switch Comparisons|Debug")
- static void DebugFloatValue(float Value, FString VariableName = TEXT("Unknown"));
-
-    /**
-	 * Logs the current value of a color variable to help debug switch nodes
-	 * @param Value - The color value to log
-	 * @param VariableName - Optional name to identify the variable in logs
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Switch Comparisons|Debug")
-	static void DebugColorValue(FLinearColor Value, FString VariableName = TEXT("Unknown"));
+	UFUNCTION(BlueprintPure, Category = PinOptions, meta = (BlueprintInternalUseOnly = "TRUE"))
+	static bool IsIntNotWithinRange(int& A, FSwitchIntRange& B);
 
 
 	// Use int32 for both parameters, matching SwitchOnInt

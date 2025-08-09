@@ -138,8 +138,7 @@ FString UK2Node_SwitchOnIntArray::GetExportTextForPin(const UEdGraphPin* InPin) 
     }
     int32 Value = PinValues[InPin->SourceIndex];
     FString ExportText = FString::FromInt(Value);
-    UE_LOG(LogSwitchOnIntArray, Warning, TEXT("GetExportTextForPin: Pin=%s, Index=%d, Value=%d, ExportText=%s"),
-        *InPin->PinName.ToString(), InPin->SourceIndex, Value, *ExportText);
+
     return ExportText;
 }
 
@@ -150,7 +149,7 @@ void UK2Node_SwitchOnIntArray::PostEditChangeProperty(FPropertyChangedEvent& Pro
 
     if (PropertyName == TEXT("PinValues"))
     {
-        UE_LOG(LogSwitchOnIntArray, Log, TEXT("PinValues property changed, reconstructing node"));
+        UE_LOG(LogSwitchOnIntArray, VeryVerbose, TEXT("PinValues property changed, reconstructing node"));
         bIsDirty = true;
     }
 
@@ -218,122 +217,7 @@ void UK2Node_SwitchOnIntArray::ValidateNodeDuringCompilation(FCompilerResultsLog
         MessageLog.Warning(*FText::FromString(WarningMessage).ToString(), this);
     }
 
-    // ADD DEBUG INSPECTION FOR SELECTION PIN VALUE
-    UEdGraphPin* SelectionPin = GetSelectionPin();
-    if (SelectionPin && SelectionPin->LinkedTo.Num() > 0)
-    {
-        UE_LOG(LogSwitchOnIntArray, Warning, TEXT("VALIDATING - Selection pin has %d connections"), SelectionPin->LinkedTo.Num());
-        
-        // Log details about what's connected to the selection pin
-        for (UEdGraphPin* LinkedPin : SelectionPin->LinkedTo)
-        {
-            UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Connected to: %s, PinName=%s"), 
-                *GetNameSafe(LinkedPin->GetOwningNode()), *LinkedPin->PinName.ToString());
-            
-            // If it's coming from a variable getter, show the variable name
-            UK2Node_VariableGet* VarNode = Cast<UK2Node_VariableGet>(LinkedPin->GetOwningNode());
-            if (VarNode)
-            {
-                FString VarName = VarNode->GetVarNameString();
-                UE_LOG(LogSwitchOnIntArray, Warning, TEXT("    => Variable: %s"), *VarName);
-            }
-        }
-    }
-    else
-    {
-        UE_LOG(LogSwitchOnIntArray, Warning, TEXT("VALIDATING - Selection pin has no connections"));
-        if (SelectionPin)
-        {
-            // Check if there's a default value set
-            UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Default value: %s"), *SelectionPin->DefaultValue);
-        }
-    }
-}
-
-void UK2Node_SwitchOnIntArray::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
-{
-    UE_LOG(LogSwitchOnIntArray, Warning, TEXT("EXPANDING NODE - %s"), *GetName());
-    
-    UEdGraphPin* SelectionPin = GetSelectionPin();
-    if (SelectionPin)
-    {
-        // Get the net that's feeding into the selection pin
-        UEdGraphPin* SelectionNet = FEdGraphUtilities::GetNetFromPin(SelectionPin);
-        
-        if (SelectionNet)
-        {
-            UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Selection pin connected to net: %s"), *SelectionNet->PinName.ToString());
-            
-            // Look at the selection pin's value during compilation
-            FString PinValue = SelectionPin->DefaultValue;
-            UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Selection pin default value: %s"), *PinValue);
-            
-            // If pin is linked to something, trace where it's coming from
-            if (SelectionPin->LinkedTo.Num() > 0)
-            {
-                UEdGraphPin* LinkedPin = SelectionPin->LinkedTo[0];
-                UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Linked from pin: %s on node %s"), 
-                    *LinkedPin->PinName.ToString(), 
-                    *GetNameSafe(LinkedPin->GetOwningNode()));
-                
-                // If it's a variable get node, print details
-                UK2Node_VariableGet* VarNode = Cast<UK2Node_VariableGet>(LinkedPin->GetOwningNode());
-                if (VarNode)
-                {
-                    FString VarName = VarNode->GetVarNameString();
-                    UE_LOG(LogSwitchOnIntArray, Warning, TEXT("    => Variable: %s"), *VarName);
-                    
-                    // Get the blueprint that owns this node
-                    if (UBlueprint* BP = CompilerContext.Blueprint)
-                    {
-                        UE_LOG(LogSwitchOnIntArray, Warning, TEXT("    => Blueprint: %s"), *BP->GetName());
-                        
-                        // Properly look up property using the schema
-                        const UEdGraphSchema_K2* Schema = GetDefault<UEdGraphSchema_K2>();
-                        bool bIsSparseProperty = false;
-                        
-                        if (BP->GeneratedClass)
-                        {
-                            FProperty* VarProperty = FKismetCompilerUtilities::FindPropertyInScope(
-                                BP->GeneratedClass, 
-                                LinkedPin,
-                                CompilerContext.MessageLog, 
-                                Schema,
-                                BP->GeneratedClass,
-                                bIsSparseProperty);
-                                
-                            if (VarProperty)
-                            {
-                                UE_LOG(LogSwitchOnIntArray, Warning, TEXT("    => Found variable property: %s"), *VarProperty->GetName());
-                            }
-                            else
-                            {
-                                UE_LOG(LogSwitchOnIntArray, Warning, TEXT("    => Could not find variable property"));
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Selection pin has no incoming links"));
-            }
-        }
-        else
-        {
-            UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Selection pin not connected to any net"));
-        }
-        
-        // Log all PinValues for debugging
-        UE_LOG(LogSwitchOnIntArray, Warning, TEXT("Available case values:"));
-        for (int32 i = 0; i < PinValues.Num(); ++i)
-        {
-            UE_LOG(LogSwitchOnIntArray, Warning, TEXT("  - Case %d: Value=%d"), i, PinValues[i]);
-        }
-    }
-    
-    // Call the parent implementation to do the actual expansion
-    Super::ExpandNode(CompilerContext, SourceGraph);
+   
 }
 
 

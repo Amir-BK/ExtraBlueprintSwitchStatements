@@ -61,8 +61,7 @@ public:
 
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 
-	// Added missing ExpandNode declaration
-	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+
 
 	// Add validation during compilation
 	virtual void ValidateNodeDuringCompilation(class FCompilerResultsLog& MessageLog) const override;
